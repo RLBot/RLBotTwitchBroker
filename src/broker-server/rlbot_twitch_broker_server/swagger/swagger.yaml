@@ -1,0 +1,59 @@
+openapi: 3.0.0
+info:
+  title: RLBot Twitch Broker
+  description: Allows custom Rocket League bots to register themselves with a central
+    broker.
+  contact:
+    email: rlbotofficial@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  version: 1.0.0
+externalDocs:
+  description: Find out more about RLBot
+  url: http://www.rlbot.org/
+servers:
+- url: /
+tags:
+- name: register
+  description: Allows bots to register themselves
+paths:
+  /register/actionServer:
+    post:
+      tags:
+      - register
+      operationId: register_action_server
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionServerRegistration'
+        required: true
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "400":
+          description: Invalid status value
+      x-openapi-router-controller: rlbot_twitch_broker_server.controllers.register_controller
+components:
+  schemas:
+    ActionServerRegistration:
+      type: object
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          example: 200
+        message:
+          type: string
+          example: Succesfully processed operation
+      example:
+        code: 200
+        message: Succesfully processed operation
+
