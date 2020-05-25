@@ -5,12 +5,14 @@ import connexion
 from rlbot_action_server import encoder
 from rlbot_action_server.models import AvailableActions
 
+from models.action_choice import ActionChoice
+
 
 class BotActionBroker:
     def get_actions_currently_available(self) -> AvailableActions:
         raise NotImplementedError()
 
-    def set_action(self, action):
+    def set_action(self, action: ActionChoice):
         raise NotImplementedError()
 
 

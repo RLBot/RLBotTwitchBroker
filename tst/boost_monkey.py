@@ -1,6 +1,7 @@
 from threading import Thread
 from typing import List
 
+from rlbot.utils.game_state_util import CarState, GameState
 from rlbot.utils.logging_utils import get_logger
 from rlbot.utils.structures.game_data_struct import GameTickPacket, PlayerInfo
 from rlbot.utils.structures.game_interface import GameInterface
@@ -9,17 +10,20 @@ from rlbot_action_server.bot_holder import set_bot_action_broker
 from rlbot_action_server.models import BotAction, AvailableActions, ActionChoice
 from time import sleep
 
+GIVE_FULL_BOOST = 'giveFullBoost'
+REMOVE_BOOST = 'removeBoost'
+PLAYER_NAME = 'playerName'
 
 class MyActionBroker(BotActionBroker):
     def __init__(self, bot):
         self.bot = bot
-        self.current_action: ActionChoice = None
+        self.current_action: BotAction
 
     def get_actions_currently_available(self) -> AvailableActions:
         return self.bot.get_actions_currently_available()
 
-    def set_action(self, action: ActionChoice):
-        self.current_action = action
+    def set_action(self, choice: ActionChoice):
+        self.current_action = choice.action
 
 
 class BoostMonkey():
@@ -43,13 +47,31 @@ class BoostMonkey():
                            for i in range(self.game_tick_packet.num_cars)]
             self.known_players = [p for p in raw_players if p.name]
 
+            current_action: BotAction = self.action_broker.current_action
+            if current_action:
+                boost_amount = 0
+                if current_action.action_type == GIVE_FULL_BOOST:
+                    boost_amount = 100
+                player_index = self.get_player_index_by_name(current_action.data[PLAYER_NAME])
+                if player_index is not None:
+                    self.game_interface.set_game_state(GameState(cars={player_index: CarState(boost_amount=boost_amount)}))
+                self.action_broker.current_action = None
+
             sleep(0.5)
+
+    def get_player_index_by_name(self, name: str):
+        for i in range(self.game_tick_packet.num_cars):
+            car = self.game_tick_packet.game_cars[i]
+            if car.name == name:
+                return i
+        return None
+
 
     def get_actions_currently_available(self) -> AvailableActions:
         actions = []
         for player in self.known_players:
-            actions.append(BotAction(f'Give {player.name} full boost'))
-            actions.append(BotAction(f'Take boost away from {player.name}'))
+            actions.append(BotAction(description=f'Give {player.name} full boost', action_type=GIVE_FULL_BOOST, data={PLAYER_NAME: player.name}))
+            actions.append(BotAction(description=f'Take boost away from {player.name}', action_type=REMOVE_BOOST, data={PLAYER_NAME: player.name}))
 
         return AvailableActions(None, actions)
 
