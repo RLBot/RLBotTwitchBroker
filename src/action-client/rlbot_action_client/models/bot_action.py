@@ -29,45 +29,77 @@ class BotAction(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'name': 'str',
-        'strategic_category': 'StrategicCategory'
+        'description': 'str',
+        'action_type': 'str',
+        'strategic_category': 'StrategicCategory',
+        'data': 'dict(str, object)'
     }
 
     attribute_map = {
-        'name': 'name',
-        'strategic_category': 'strategicCategory'
+        'description': 'description',
+        'action_type': 'actionType',
+        'strategic_category': 'strategicCategory',
+        'data': 'data'
     }
 
-    def __init__(self, name=None, strategic_category=None):  # noqa: E501
+    def __init__(self, description=None, action_type=None, strategic_category=None, data=None):  # noqa: E501
         """BotAction - a model defined in Swagger"""  # noqa: E501
-        self._name = None
+        self._description = None
+        self._action_type = None
         self._strategic_category = None
+        self._data = None
         self.discriminator = None
-        self.name = name
-        self.strategic_category = strategic_category
+        if description is not None:
+            self.description = description
+        self.action_type = action_type
+        if strategic_category is not None:
+            self.strategic_category = strategic_category
+        if data is not None:
+            self.data = data
 
     @property
-    def name(self):
-        """Gets the name of this BotAction.  # noqa: E501
+    def description(self):
+        """Gets the description of this BotAction.  # noqa: E501
 
 
-        :return: The name of this BotAction.  # noqa: E501
+        :return: The description of this BotAction.  # noqa: E501
         :rtype: str
         """
-        return self._name
+        return self._description
 
-    @name.setter
-    def name(self, name):
-        """Sets the name of this BotAction.
+    @description.setter
+    def description(self, description):
+        """Sets the description of this BotAction.
 
 
-        :param name: The name of this BotAction.  # noqa: E501
+        :param description: The description of this BotAction.  # noqa: E501
         :type: str
         """
-        if name is None:
-            raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
-        self._name = name
+        self._description = description
+
+    @property
+    def action_type(self):
+        """Gets the action_type of this BotAction.  # noqa: E501
+
+
+        :return: The action_type of this BotAction.  # noqa: E501
+        :rtype: str
+        """
+        return self._action_type
+
+    @action_type.setter
+    def action_type(self, action_type):
+        """Sets the action_type of this BotAction.
+
+
+        :param action_type: The action_type of this BotAction.  # noqa: E501
+        :type: str
+        """
+        if action_type is None:
+            raise ValueError("Invalid value for `action_type`, must not be `None`")  # noqa: E501
+
+        self._action_type = action_type
 
     @property
     def strategic_category(self):
@@ -87,10 +119,29 @@ class BotAction(object):
         :param strategic_category: The strategic_category of this BotAction.  # noqa: E501
         :type: StrategicCategory
         """
-        if strategic_category is None:
-            raise ValueError("Invalid value for `strategic_category`, must not be `None`")  # noqa: E501
 
         self._strategic_category = strategic_category
+
+    @property
+    def data(self):
+        """Gets the data of this BotAction.  # noqa: E501
+
+
+        :return: The data of this BotAction.  # noqa: E501
+        :rtype: dict(str, object)
+        """
+        return self._data
+
+    @data.setter
+    def data(self, data):
+        """Sets the data of this BotAction.
+
+
+        :param data: The data of this BotAction.  # noqa: E501
+        :type: dict(str, object)
+        """
+
+        self._data = data
 
     def to_dict(self):
         """Returns the model properties as a dict"""

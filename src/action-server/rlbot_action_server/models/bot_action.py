@@ -15,25 +15,35 @@ class BotAction(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, name: str=None, strategic_category: StrategicCategory=None):  # noqa: E501
+    def __init__(self, description: str=None, action_type: str=None, strategic_category: StrategicCategory=None, data: Dict=None):  # noqa: E501
         """BotAction - a model defined in Swagger
 
-        :param name: The name of this BotAction.  # noqa: E501
-        :type name: str
+        :param description: The description of this BotAction.  # noqa: E501
+        :type description: str
+        :param action_type: The action_type of this BotAction.  # noqa: E501
+        :type action_type: str
         :param strategic_category: The strategic_category of this BotAction.  # noqa: E501
         :type strategic_category: StrategicCategory
+        :param data: The data of this BotAction.  # noqa: E501
+        :type data: Dict
         """
         self.swagger_types = {
-            'name': str,
-            'strategic_category': StrategicCategory
+            'description': str,
+            'action_type': str,
+            'strategic_category': StrategicCategory,
+            'data': Dict
         }
 
         self.attribute_map = {
-            'name': 'name',
-            'strategic_category': 'strategicCategory'
+            'description': 'description',
+            'action_type': 'actionType',
+            'strategic_category': 'strategicCategory',
+            'data': 'data'
         }
-        self._name = name
+        self._description = description
+        self._action_type = action_type
         self._strategic_category = strategic_category
+        self._data = data
 
     @classmethod
     def from_dict(cls, dikt) -> 'BotAction':
@@ -47,27 +57,48 @@ class BotAction(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def name(self) -> str:
-        """Gets the name of this BotAction.
+    def description(self) -> str:
+        """Gets the description of this BotAction.
 
 
-        :return: The name of this BotAction.
+        :return: The description of this BotAction.
         :rtype: str
         """
-        return self._name
+        return self._description
 
-    @name.setter
-    def name(self, name: str):
-        """Sets the name of this BotAction.
+    @description.setter
+    def description(self, description: str):
+        """Sets the description of this BotAction.
 
 
-        :param name: The name of this BotAction.
-        :type name: str
+        :param description: The description of this BotAction.
+        :type description: str
         """
-        if name is None:
-            raise ValueError("Invalid value for `name`, must not be `None`")  # noqa: E501
 
-        self._name = name
+        self._description = description
+
+    @property
+    def action_type(self) -> str:
+        """Gets the action_type of this BotAction.
+
+
+        :return: The action_type of this BotAction.
+        :rtype: str
+        """
+        return self._action_type
+
+    @action_type.setter
+    def action_type(self, action_type: str):
+        """Sets the action_type of this BotAction.
+
+
+        :param action_type: The action_type of this BotAction.
+        :type action_type: str
+        """
+        if action_type is None:
+            raise ValueError("Invalid value for `action_type`, must not be `None`")  # noqa: E501
+
+        self._action_type = action_type
 
     @property
     def strategic_category(self) -> StrategicCategory:
@@ -87,7 +118,26 @@ class BotAction(Model):
         :param strategic_category: The strategic_category of this BotAction.
         :type strategic_category: StrategicCategory
         """
-        if strategic_category is None:
-            raise ValueError("Invalid value for `strategic_category`, must not be `None`")  # noqa: E501
 
         self._strategic_category = strategic_category
+
+    @property
+    def data(self) -> Dict:
+        """Gets the data of this BotAction.
+
+
+        :return: The data of this BotAction.
+        :rtype: Dict
+        """
+        return self._data
+
+    @data.setter
+    def data(self, data: Dict):
+        """Sets the data of this BotAction.
+
+
+        :param data: The data of this BotAction.
+        :type data: Dict
+        """
+
+        self._data = data

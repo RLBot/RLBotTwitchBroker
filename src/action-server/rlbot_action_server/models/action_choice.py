@@ -6,6 +6,7 @@ from datetime import date, datetime  # noqa: F401
 from typing import List, Dict  # noqa: F401
 
 from rlbot_action_server.models.base_model_ import Model
+from rlbot_action_server.models.bot_action import BotAction  # noqa: F401,E501
 from rlbot_action_server import util
 
 
@@ -14,20 +15,20 @@ class ActionChoice(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, name: str=None):  # noqa: E501
+    def __init__(self, action: BotAction=None):  # noqa: E501
         """ActionChoice - a model defined in Swagger
 
-        :param name: The name of this ActionChoice.  # noqa: E501
-        :type name: str
+        :param action: The action of this ActionChoice.  # noqa: E501
+        :type action: BotAction
         """
         self.swagger_types = {
-            'name': str
+            'action': BotAction
         }
 
         self.attribute_map = {
-            'name': 'name'
+            'action': 'action'
         }
-        self._name = name
+        self._action = action
 
     @classmethod
     def from_dict(cls, dikt) -> 'ActionChoice':
@@ -41,22 +42,22 @@ class ActionChoice(Model):
         return util.deserialize_model(dikt, cls)
 
     @property
-    def name(self) -> str:
-        """Gets the name of this ActionChoice.
+    def action(self) -> BotAction:
+        """Gets the action of this ActionChoice.
 
 
-        :return: The name of this ActionChoice.
-        :rtype: str
+        :return: The action of this ActionChoice.
+        :rtype: BotAction
         """
-        return self._name
+        return self._action
 
-    @name.setter
-    def name(self, name: str):
-        """Sets the name of this ActionChoice.
+    @action.setter
+    def action(self, action: BotAction):
+        """Sets the action of this ActionChoice.
 
 
-        :param name: The name of this ActionChoice.
-        :type name: str
+        :param action: The action of this ActionChoice.
+        :type action: BotAction
         """
 
-        self._name = name
+        self._action = action

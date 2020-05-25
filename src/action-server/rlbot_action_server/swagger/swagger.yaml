@@ -63,17 +63,24 @@ components:
       - defense
     BotAction:
       required:
-      - name
-      - strategicCategory
+      - actionType
       type: object
       properties:
-        name:
+        description:
           type: string
-          example: gatherBoost
+          example: Demolish enemy bot named SomeBot
+        actionType:
+          type: string
+          example: demolishEnemy
         strategicCategory:
           $ref: '#/components/schemas/StrategicCategory'
+        data:
+          type: object
+          additionalProperties: true
       example:
-        name: gatherBoost
+        actionType: demolishEnemy
+        data: ""
+        description: Demolish enemy bot named SomeBot
         strategicCategory: neutral
     AvailableActions:
       type: object
@@ -89,7 +96,9 @@ components:
         - null
         - null
         currentAction:
-          name: gatherBoost
+          actionType: demolishEnemy
+          data: ""
+          description: Demolish enemy bot named SomeBot
           strategicCategory: neutral
     ApiResponse:
       type: object
@@ -107,7 +116,6 @@ components:
     ActionChoice:
       type: object
       properties:
-        name:
-          type: string
-          example: gatherBoost
+        action:
+          $ref: '#/components/schemas/BotAction'
 

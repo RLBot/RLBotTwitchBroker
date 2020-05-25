@@ -29,40 +29,40 @@ class ActionChoice(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'name': 'str'
+        'action': 'BotAction'
     }
 
     attribute_map = {
-        'name': 'name'
+        'action': 'action'
     }
 
-    def __init__(self, name=None):  # noqa: E501
+    def __init__(self, action=None):  # noqa: E501
         """ActionChoice - a model defined in Swagger"""  # noqa: E501
-        self._name = None
+        self._action = None
         self.discriminator = None
-        if name is not None:
-            self.name = name
+        if action is not None:
+            self.action = action
 
     @property
-    def name(self):
-        """Gets the name of this ActionChoice.  # noqa: E501
+    def action(self):
+        """Gets the action of this ActionChoice.  # noqa: E501
 
 
-        :return: The name of this ActionChoice.  # noqa: E501
-        :rtype: str
+        :return: The action of this ActionChoice.  # noqa: E501
+        :rtype: BotAction
         """
-        return self._name
+        return self._action
 
-    @name.setter
-    def name(self, name):
-        """Sets the name of this ActionChoice.
+    @action.setter
+    def action(self, action):
+        """Sets the action of this ActionChoice.
 
 
-        :param name: The name of this ActionChoice.  # noqa: E501
-        :type: str
+        :param action: The action of this ActionChoice.  # noqa: E501
+        :type: BotAction
         """
 
-        self._name = name
+        self._action = action
 
     def to_dict(self):
         """Returns the model properties as a dict"""
