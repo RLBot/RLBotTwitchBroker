@@ -29,14 +29,40 @@ class ActionServerRegistration(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'base_url': 'str'
     }
 
     attribute_map = {
+        'base_url': 'baseUrl'
     }
 
-    def __init__(self):  # noqa: E501
+    def __init__(self, base_url=None):  # noqa: E501
         """ActionServerRegistration - a model defined in Swagger"""  # noqa: E501
+        self._base_url = None
         self.discriminator = None
+        if base_url is not None:
+            self.base_url = base_url
+
+    @property
+    def base_url(self):
+        """Gets the base_url of this ActionServerRegistration.  # noqa: E501
+
+
+        :return: The base_url of this ActionServerRegistration.  # noqa: E501
+        :rtype: str
+        """
+        return self._base_url
+
+    @base_url.setter
+    def base_url(self, base_url):
+        """Sets the base_url of this ActionServerRegistration.
+
+
+        :param base_url: The base_url of this ActionServerRegistration.  # noqa: E501
+        :type: str
+        """
+
+        self._base_url = base_url
 
     def to_dict(self):
         """Returns the model properties as a dict"""

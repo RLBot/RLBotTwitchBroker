@@ -10,10 +10,10 @@ def choose_action(body):
         action_broker = bot_holder.get_bot_action_broker()
         if action_broker is not None:
             action_broker.set_action(body)
-            return ApiResponse(200, f'Successfully set action: {body.action.description}').to_dict()
+            return ApiResponse(200, f'Successfully set action: {body.action.description}')
 
 
 def get_actions_currently_available():
     action_broker = bot_holder.get_bot_action_broker()
     if action_broker is not None:
-        return action_broker.get_actions_currently_available().to_dict()
+        return action_broker.get_actions_currently_available()

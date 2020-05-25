@@ -5,9 +5,11 @@ from rlbot.utils.game_state_util import CarState, GameState
 from rlbot.utils.logging_utils import get_logger
 from rlbot.utils.structures.game_data_struct import GameTickPacket, PlayerInfo
 from rlbot.utils.structures.game_interface import GameInterface
-from rlbot_action_server.bot_action_broker import BotActionBroker, run_action_server
+from rlbot_action_server.bot_action_broker import BotActionBroker, run_action_server, find_usable_port
 from rlbot_action_server.bot_holder import set_bot_action_broker
 from rlbot_action_server.models import BotAction, AvailableActions, ActionChoice
+from rlbot_twitch_broker_client import Configuration, RegisterApi, ApiClient, ActionServerRegistration
+from rlbot_twitch_broker_client.defaults import STANDARD_TWITCH_BROKER_PORT
 from time import sleep
 
 GIVE_FULL_BOOST = 'giveFullBoost'
@@ -17,7 +19,7 @@ PLAYER_NAME = 'playerName'
 class MyActionBroker(BotActionBroker):
     def __init__(self, bot):
         self.bot = bot
-        self.current_action: BotAction
+        self.current_action: BotAction = None
 
     def get_actions_currently_available(self) -> AvailableActions:
         return self.bot.get_actions_currently_available()
@@ -37,10 +39,17 @@ class BoostMonkey():
 
     def start(self):
         self.game_interface.load_interface()
-        action_server_thread = Thread(target=run_action_server, args=(9097,))
+        port = find_usable_port(9097)
+        action_server_thread = Thread(target=run_action_server, args=(port,))
         action_server_thread.setDaemon(True)
         action_server_thread.start()
         set_bot_action_broker(self.action_broker)  # This seems to only work after the bot hot reloads once, weird.
+
+        register_api_config = Configuration()
+        register_api_config.host = f"http://localhost:{STANDARD_TWITCH_BROKER_PORT}"
+        twitch_broker_register = RegisterApi(ApiClient(configuration=register_api_config))
+        twitch_broker_register.register_action_server(ActionServerRegistration(base_url=f"http://localhost:{port}"))
+
         while True:
             self.game_interface.update_live_data_packet(self.game_tick_packet)
             raw_players = [self.game_tick_packet.game_cars[i]
@@ -73,6 +82,7 @@ class BoostMonkey():
             actions.append(BotAction(description=f'Give {player.name} full boost', action_type=GIVE_FULL_BOOST, data={PLAYER_NAME: player.name}))
             actions.append(BotAction(description=f'Take boost away from {player.name}', action_type=REMOVE_BOOST, data={PLAYER_NAME: player.name}))
 
+        print('sending some great actions from the monkey')
         return AvailableActions(None, actions)
 
 

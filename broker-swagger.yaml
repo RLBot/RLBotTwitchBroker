@@ -41,6 +41,10 @@ components:
   schemas:
     ActionServerRegistration:
       type: object
+      properties:
+        baseUrl:
+          type: string
+          example: 'http://localhost:8080'
     ApiResponse:
       type: object
       properties:

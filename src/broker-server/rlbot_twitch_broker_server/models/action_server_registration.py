@@ -14,15 +14,20 @@ class ActionServerRegistration(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self):  # noqa: E501
+    def __init__(self, base_url: str=None):  # noqa: E501
         """ActionServerRegistration - a model defined in Swagger
 
+        :param base_url: The base_url of this ActionServerRegistration.  # noqa: E501
+        :type base_url: str
         """
         self.swagger_types = {
+            'base_url': str
         }
 
         self.attribute_map = {
+            'base_url': 'baseUrl'
         }
+        self._base_url = base_url
 
     @classmethod
     def from_dict(cls, dikt) -> 'ActionServerRegistration':
@@ -34,3 +39,24 @@ class ActionServerRegistration(Model):
         :rtype: ActionServerRegistration
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def base_url(self) -> str:
+        """Gets the base_url of this ActionServerRegistration.
+
+
+        :return: The base_url of this ActionServerRegistration.
+        :rtype: str
+        """
+        return self._base_url
+
+    @base_url.setter
+    def base_url(self, base_url: str):
+        """Sets the base_url of this ActionServerRegistration.
+
+
+        :param base_url: The base_url of this ActionServerRegistration.
+        :type base_url: str
+        """
+
+        self._base_url = base_url
