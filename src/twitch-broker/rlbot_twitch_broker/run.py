@@ -1,6 +1,7 @@
+import random
 from threading import Thread
 
-from rlbot_action_client import Configuration, ActionApi, ApiClient, AvailableActions
+from rlbot_action_client import Configuration, ActionApi, ApiClient, AvailableActions, ActionChoice
 from time import sleep
 
 from rlbot_twitch_broker_server import client_registry
@@ -20,5 +21,10 @@ def run_twitch_broker(desired_port: int):
             bot_action_api_config = Configuration()
             bot_action_api_config.host = client.base_url
             action_api = ActionApi(ApiClient(configuration=bot_action_api_config))
-            api_response: AvailableActions = action_api.get_actions_currently_available()
-            print(f'response from {client.base_url}: {api_response}')
+            available_actions: AvailableActions = action_api.get_actions_currently_available()
+
+            if len(available_actions.available_actions) > 0:
+                chosen_action = random.choice(available_actions.available_actions)
+                choice = ActionChoice(action=chosen_action)
+                result = action_api.choose_action(choice)
+                print(result)

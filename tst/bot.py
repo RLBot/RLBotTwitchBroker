@@ -1,4 +1,5 @@
 from threading import Thread
+from time import sleep
 
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 from rlbot.utils.structures.game_data_struct import GameTickPacket
@@ -9,6 +10,7 @@ from rlbot_action_server.models import BotAction, AvailableActions, ActionChoice
 from rlbot_twitch_broker_client import ActionServerRegistration
 from rlbot_twitch_broker_client.api.register_api import RegisterApi
 from rlbot_twitch_broker_client.defaults import STANDARD_TWITCH_BROKER_PORT
+from urllib3.exceptions import MaxRetryError
 
 
 class MyActionBroker(BotActionBroker):
@@ -31,16 +33,21 @@ class MyBot(BaseAgent):
 
     def initialize_agent(self):
         port = find_usable_port(8080)
-        action_server_thread = Thread(target=run_action_server, args=(port,))
-        action_server_thread.setDaemon(True)
-        action_server_thread.start()
+        Thread(target=run_action_server, args=(port,), daemon=True).start()
         set_bot_action_broker(self.action_broker)  # This now works on initial load
 
+        Thread(target=self.stay_connected_to_twitch_broker, args=(port,), daemon=True).start()
+
+    def stay_connected_to_twitch_broker(self, port):
         register_api_config = Configuration()
         register_api_config.host = f"http://localhost:{STANDARD_TWITCH_BROKER_PORT}"
         twitch_broker_register = RegisterApi(ApiClient(configuration=register_api_config))
-        twitch_broker_register.register_action_server(ActionServerRegistration(base_url=f"http://localhost:{port}"))
-
+        while True:
+            try:
+                twitch_broker_register.register_action_server(ActionServerRegistration(base_url=f"http://localhost:{port}"))
+            except MaxRetryError:
+                self.logger.warning('Failed to register with twitch broker, will try again...')
+            sleep(10)
 
     def get_actions_currently_available(self) -> AvailableActions:
         return AvailableActions(self.current_action, [
