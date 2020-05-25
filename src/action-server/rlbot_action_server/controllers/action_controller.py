@@ -12,7 +12,7 @@ from rlbot_action_server import bot_holder
 def choose_action(body):
     if connexion.request.is_json:
         body = ActionChoice.from_dict(connexion.request.get_json())
-        bot = bot_holder.get_bot()
+        bot = bot_holder.get_bot_action_broker()
         if bot is not None:
             bot.set_action(body)
             return f'set action on {bot.name}!'
@@ -23,7 +23,7 @@ def choose_action(body):
 
 
 def get_actions_currently_available():
-    bot = bot_holder.get_bot()
+    bot = bot_holder.get_bot_action_broker()
     if bot is not None:
         return bot.get_actions_currently_available().to_dict()
     return 'do some magic but bot is none!'
