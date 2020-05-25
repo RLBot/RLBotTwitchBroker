@@ -93,7 +93,6 @@ class BoostMonkey():
             actions.append(BotAction(description=f'Take boost away from {player.name}', action_type=REMOVE_BOOST,
                                      data={PLAYER_NAME: player.name}))
 
-        print('sending some great actions from the monkey')
         return AvailableActions(None, actions)
 
 
