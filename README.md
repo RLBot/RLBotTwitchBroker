@@ -10,6 +10,17 @@ Example scenario:
 
 This can also be used to influence the strategy of bots, e.g. forcing them to take shots, rotate out, etc. The system is designed so that people can easily update their existing bots to support the action interface.
 
+## Getting started
+
+1. Clone the repository.
+1. Install all 5 packages to whatever pip repository you intend to use.
+   - If it's your system python, you can run install_packages_locally.bat to do this easily.
+   - If you wish to use RLBotGUI, installing the packages will *not* work if it's using the bundled python instance. You can use an installation technique like https://github.com/RLBot/RLBotGUI/tree/install/alternative-install to make it use a full python instance.
+1. Start a RLBot match and get all the scripts in /tst running at once
+   - This can be done by loading /tst in RLBotGUI and toggling on the scripts that appear.
+   - You can also just launch the scripts manually.
+1. At time of writing, the twitch_broker.py script will now present you with options to choose via the command line, which give you control over the boost_monkey and the included bot.
+
 ## Design
 
 ![diagram](https://i.imgur.com/IbzEBnq.png)
