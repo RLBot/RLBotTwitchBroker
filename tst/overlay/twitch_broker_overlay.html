@@ -1,0 +1,64 @@
+<!--TODO: Suggestions from Parzival:-->
+<!--Change the background color of divisions that already played, same for ones that are scheduled-->
+<!--Add time zone abbreviation-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="twitch_broker_overlay.css"/>
+
+</head>
+<body>
+
+    <div id="overlay_div"></div>
+    <div id="message"></div>
+
+<script>
+    const overlayDiv = $('#overlay_div');
+    const messageDiv = $('#message');
+    let previousData = null;
+
+    setInterval(function() {
+        $.get('twitch_broker_overlay.json', function(data) {
+            if (JSON.stringify(data) !== previousData) {
+
+                overlayDiv.empty();
+                for (let i = 0; i < data.sections.length; i++) {
+
+                    const sectionDiv = $('<div class="section"></div>');
+                    const section = data.sections[i];
+                    overlayDiv.append(sectionDiv);
+                    sectionDiv.append('<div class="section-header">' + section.header + '</div>');
+
+                    for (let j = 0; j < section.actions.length; j++) {
+                        const numberedAction = section.actions[j];
+                        const action = numberedAction.action;
+                        sectionDiv.append('<div class="action"><span class="menu-id-prefix">' + data.menu_id +
+                            '</span><span class="opt-number">' + numberedAction.number +
+                            '</span>' + action.description + '</div>');
+                    }
+
+                    overlayDiv.append(sectionDiv);
+                }
+
+                messageDiv.empty();
+                if (data.message) {
+                    message_lines = data.message.split('\n');
+                    for (let i = 0; i < message_lines.length; i++) {
+                        const fixed_line = message_lines[i].replace(/ /g, '&nbsp;');
+                        messageDiv.append("<div>" + fixed_line + "</div>");
+                    }
+                }
+                previousData = JSON.stringify(data);
+            }
+        });
+    }, 500);
+</script>
+
+</body>
+</html>
