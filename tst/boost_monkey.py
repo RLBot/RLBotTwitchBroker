@@ -1,10 +1,9 @@
 from threading import Thread
 from typing import List
 
+from rlbot.agents.base_script import BaseScript
 from rlbot.utils.game_state_util import CarState, GameState
-from rlbot.utils.logging_utils import get_logger
-from rlbot.utils.structures.game_data_struct import GameTickPacket, PlayerInfo
-from rlbot.utils.structures.game_interface import GameInterface
+from rlbot.utils.structures.game_data_struct import PlayerInfo
 from rlbot_action_server.bot_action_broker import BotActionBroker, run_action_server, find_usable_port
 from rlbot_action_server.bot_holder import set_bot_action_broker
 from rlbot_action_server.models import BotAction, AvailableActions, ActionChoice
@@ -19,23 +18,21 @@ PLAYER_NAME = 'playerName'
 
 
 class MyActionBroker(BotActionBroker):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, script):
+        self.script = script
         self.current_action: BotAction = None
 
-    def get_actions_currently_available(self) -> AvailableActions:
-        return self.bot.get_actions_currently_available()
+    def get_actions_currently_available(self) -> List[AvailableActions]:
+        return self.script.get_actions_currently_available()
 
     def set_action(self, choice: ActionChoice):
         self.current_action = choice.action
 
 
-class BoostMonkey():
+class BoostMonkey(BaseScript):
 
     def __init__(self):
-        self.logger = get_logger('bstmnk')
-        self.game_interface = GameInterface(self.logger)
-        self.game_tick_packet = GameTickPacket()
+        super().__init__("Boost Monkey")
         self.action_broker = MyActionBroker(self)
         self.known_players: List[PlayerInfo] = []
 
@@ -52,7 +49,6 @@ class BoostMonkey():
             sleep(10)
 
     def start(self):
-        self.game_interface.load_interface()
         port = find_usable_port(9097)
         Thread(target=run_action_server, args=(port,), daemon=True).start()
         set_bot_action_broker(self.action_broker)  # This seems to only work after the bot hot reloads once, weird.
@@ -60,9 +56,9 @@ class BoostMonkey():
         Thread(target=self.heartbeat_connection_attempts_to_twitch_broker, args=(port,), daemon=True).start()
 
         while True:
-            self.game_interface.update_live_data_packet(self.game_tick_packet)
+            packet = self.get_game_tick_packet()
             raw_players = [self.game_tick_packet.game_cars[i]
-                           for i in range(self.game_tick_packet.num_cars)]
+                           for i in range(packet.num_cars)]
             self.known_players = [p for p in raw_players if p.name]
 
             current_action: BotAction = self.action_broker.current_action
@@ -72,7 +68,7 @@ class BoostMonkey():
                     boost_amount = 100
                 player_index = self.get_player_index_by_name(current_action.data[PLAYER_NAME])
                 if player_index is not None:
-                    self.game_interface.set_game_state(
+                    self.set_game_state(
                         GameState(cars={player_index: CarState(boost_amount=boost_amount)}))
                 self.action_broker.current_action = None
 
@@ -85,7 +81,7 @@ class BoostMonkey():
                 return i
         return None
 
-    def get_actions_currently_available(self) -> AvailableActions:
+    def get_actions_currently_available(self) -> List[AvailableActions]:
         actions = []
         for player in self.known_players:
             actions.append(BotAction(description=f'Give {player.name} full boost', action_type=GIVE_FULL_BOOST,
@@ -93,7 +89,7 @@ class BoostMonkey():
             actions.append(BotAction(description=f'Take boost away from {player.name}', action_type=REMOVE_BOOST,
                                      data={PLAYER_NAME: player.name}))
 
-        return AvailableActions(None, actions)
+        return [AvailableActions("Boost Monkey", None, actions)]
 
 
 if __name__ == '__main__':

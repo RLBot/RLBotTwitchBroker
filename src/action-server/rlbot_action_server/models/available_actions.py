@@ -15,23 +15,28 @@ class AvailableActions(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, current_action: BotAction=None, available_actions: List[BotAction]=None):  # noqa: E501
+    def __init__(self, entity_name: str=None, current_action: BotAction=None, available_actions: List[BotAction]=None):  # noqa: E501
         """AvailableActions - a model defined in Swagger
 
+        :param entity_name: The entity_name of this AvailableActions.  # noqa: E501
+        :type entity_name: str
         :param current_action: The current_action of this AvailableActions.  # noqa: E501
         :type current_action: BotAction
         :param available_actions: The available_actions of this AvailableActions.  # noqa: E501
         :type available_actions: List[BotAction]
         """
         self.swagger_types = {
+            'entity_name': str,
             'current_action': BotAction,
             'available_actions': List[BotAction]
         }
 
         self.attribute_map = {
+            'entity_name': 'entityName',
             'current_action': 'currentAction',
             'available_actions': 'availableActions'
         }
+        self._entity_name = entity_name
         self._current_action = current_action
         self._available_actions = available_actions
 
@@ -45,6 +50,29 @@ class AvailableActions(Model):
         :rtype: AvailableActions
         """
         return util.deserialize_model(dikt, cls)
+
+    @property
+    def entity_name(self) -> str:
+        """Gets the entity_name of this AvailableActions.
+
+        The name of the bot or script that these actions are associated with.  # noqa: E501
+
+        :return: The entity_name of this AvailableActions.
+        :rtype: str
+        """
+        return self._entity_name
+
+    @entity_name.setter
+    def entity_name(self, entity_name: str):
+        """Sets the entity_name of this AvailableActions.
+
+        The name of the bot or script that these actions are associated with.  # noqa: E501
+
+        :param entity_name: The entity_name of this AvailableActions.
+        :type entity_name: str
+        """
+
+        self._entity_name = entity_name
 
     @property
     def current_action(self) -> BotAction:

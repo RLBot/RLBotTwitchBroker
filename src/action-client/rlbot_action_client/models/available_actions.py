@@ -29,24 +29,52 @@ class AvailableActions(object):
                             and the value is json key in definition.
     """
     swagger_types = {
+        'entity_name': 'str',
         'current_action': 'BotAction',
         'available_actions': 'list[BotAction]'
     }
 
     attribute_map = {
+        'entity_name': 'entityName',
         'current_action': 'currentAction',
         'available_actions': 'availableActions'
     }
 
-    def __init__(self, current_action=None, available_actions=None):  # noqa: E501
+    def __init__(self, entity_name=None, current_action=None, available_actions=None):  # noqa: E501
         """AvailableActions - a model defined in Swagger"""  # noqa: E501
+        self._entity_name = None
         self._current_action = None
         self._available_actions = None
         self.discriminator = None
+        if entity_name is not None:
+            self.entity_name = entity_name
         if current_action is not None:
             self.current_action = current_action
         if available_actions is not None:
             self.available_actions = available_actions
+
+    @property
+    def entity_name(self):
+        """Gets the entity_name of this AvailableActions.  # noqa: E501
+
+        The name of the bot or script that these actions are associated with.  # noqa: E501
+
+        :return: The entity_name of this AvailableActions.  # noqa: E501
+        :rtype: str
+        """
+        return self._entity_name
+
+    @entity_name.setter
+    def entity_name(self, entity_name):
+        """Sets the entity_name of this AvailableActions.
+
+        The name of the bot or script that these actions are associated with.  # noqa: E501
+
+        :param entity_name: The entity_name of this AvailableActions.  # noqa: E501
+        :type: str
+        """
+
+        self._entity_name = entity_name
 
     @property
     def current_action(self):

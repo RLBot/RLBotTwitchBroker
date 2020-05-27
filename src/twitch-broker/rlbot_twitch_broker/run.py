@@ -16,38 +16,49 @@ class ActionAndApi:
     action_api: ActionApi
 
 
-class TwitchBroker(BaseScript):
+class AvailableActionAggregator:
+    def __init__(self):
+        self.action_apis: Dict[str, ActionApi] = {}
 
     def make_action_api(self, client_data: ClientData):
         bot_action_api_config = Configuration()
         bot_action_api_config.host = client_data.base_url
         return ActionApi(ApiClient(configuration=bot_action_api_config))
 
-    def run(self, desired_port: int):
+    def fetch_all_and_aggregate(self):
+        registry = client_registry.CLIENT_REGISTRY
+        combined_actions: List[ActionAndApi] = []
+        for client in list(registry.clients.values()):
+            if client.base_url not in self.action_apis:
+                self.action_apis[client.base_url] = self.make_action_api(client)
+
+            action_api = self.action_apis[client.base_url]
+
+            # For some reason these API calls are slow as molasses
+            # After stepping through, it seems like we take about 1 second to form a connection.
+            # When calling the same API via Chrome, it's lightning fast.
+            # (I did this by visiting http://localhost:8080/action/currentlyAvailable )
+            # I tried setting the request header Connection=keep-alive, but that didn't help.
+            available_actions_list: List[AvailableActions] = action_api.get_actions_currently_available()
+            for available_actions in available_actions_list:
+                combined_actions += [ActionAndApi(action, action_api) for action in available_actions.available_actions]
+
+        return combined_actions
+
+
+class TwitchBroker(BaseScript):
+
+    def run_loop_with_stdin(self, desired_port: int):
         port = find_usable_port(desired_port)
-        action_server_thread = Thread(target=run_twitch_broker_server, args=(port,))
-        action_server_thread.setDaemon(True)
-        action_server_thread.start()
+        broker_server_thread = Thread(target=run_twitch_broker_server, args=(port,))
+        broker_server_thread.setDaemon(True)
+        broker_server_thread.start()
         client_registry.CLIENT_REGISTRY = client_registry.ClientRegistry()
 
-        action_apis: Dict[str, ActionApi] = {}
+        aggregator = AvailableActionAggregator()
 
         while True:
-            registry = client_registry.CLIENT_REGISTRY
-            combined_actions: List[ActionAndApi] = []
-            for client in list(registry.clients.values()):
-                if client.base_url not in action_apis:
-                    action_apis[client.base_url] = self.make_action_api(client)
-
-                action_api = action_apis[client.base_url]
-
-                # For some reason these API calls are slow as molasses
-                # After stepping through, it seems like we take about 1 second to form a connection.
-                # When calling the same API via Chrome, it's lightning fast.
-                # (I did this by visiting http://localhost:8080/action/currentlyAvailable )
-                # I tried setting the request header Connection=keep-alive, but that didn't help.
-                available_actions: AvailableActions = action_api.get_actions_currently_available()
-                combined_actions += [ActionAndApi(action, action_api) for action in available_actions.available_actions]
+            combined_actions: List[ActionAndApi] = aggregator.fetch_all_and_aggregate()
 
             if len(combined_actions) > 0:
                 action_list_string = "\n".join(
@@ -63,4 +74,4 @@ class TwitchBroker(BaseScript):
 
 
 def run_twitch_broker(desired_port: int):
-    TwitchBroker("Twitch Broker").run(desired_port)
+    TwitchBroker("Twitch Broker").run_loop_with_stdin(desired_port)

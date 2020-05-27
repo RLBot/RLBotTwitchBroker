@@ -29,7 +29,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AvailableActions'
+                type: array
+                description: If an action server is associated with multiple distinct bots or script entities, it can return an AvailableActions for each.
+                items:
+                  $ref: '#/components/schemas/AvailableActions'
   /action/choose:
     post:
       tags:
@@ -78,6 +81,10 @@ components:
     AvailableActions:
       type: object
       properties:
+        entityName:
+          type: string
+          description: The name of the bot or script that these actions are associated with.
+          example: SomeBot
         currentAction:
           $ref: '#/components/schemas/BotAction'
         availableActions:

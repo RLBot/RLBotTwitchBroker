@@ -1,4 +1,6 @@
 from threading import Thread
+from typing import List
+
 from time import sleep
 
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
@@ -18,7 +20,7 @@ class MyActionBroker(BotActionBroker):
         self.bot = bot
         self.current_action: BotAction = None
 
-    def get_actions_currently_available(self) -> AvailableActions:
+    def get_actions_currently_available(self) -> List[AvailableActions]:
         return self.bot.get_actions_currently_available()
 
     def set_action(self, choice: ActionChoice):
@@ -48,11 +50,12 @@ class MyBot(BaseAgent):
                 self.logger.warning('Failed to register with twitch broker, will try again...')
             sleep(10)
 
-    def get_actions_currently_available(self) -> AvailableActions:
-        return AvailableActions(self.action_broker.current_action, [
-            BotAction(description="Turn left", action_type="turn", data={'value': -1}),
-            BotAction(description="Turn right", action_type="turn", data={'value': 1})
-        ])
+    def get_actions_currently_available(self) -> List[AvailableActions]:
+        actions = AvailableActions(entity_name="ActionBot", current_action=self.action_broker.current_action,
+                                   available_actions=[
+                                       BotAction(description="Turn left", action_type="turn", data={'value': -1}),
+                                       BotAction(description="Turn right", action_type="turn", data={'value': 1})])
+        return [actions]
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
         steer = 0

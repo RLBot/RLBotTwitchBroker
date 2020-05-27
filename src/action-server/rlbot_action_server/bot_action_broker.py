@@ -1,5 +1,6 @@
 import socket
 from pathlib import Path
+from typing import List
 
 import connexion
 from rlbot_action_server import encoder
@@ -7,7 +8,7 @@ from rlbot_action_server.models import AvailableActions, ActionChoice
 
 
 class BotActionBroker:
-    def get_actions_currently_available(self) -> AvailableActions:
+    def get_actions_currently_available(self) -> List[AvailableActions]:
         raise NotImplementedError()
 
     def set_action(self, action: ActionChoice):
