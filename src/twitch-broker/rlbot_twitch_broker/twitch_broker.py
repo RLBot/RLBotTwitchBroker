@@ -1,10 +1,11 @@
 import json
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from threading import Thread
 from typing import List, Dict
 
-from dataclasses import dataclass
+from rlbot.agents.base_script import BaseScript
 from rlbot_action_client import Configuration, ActionApi, ApiClient, ActionChoice
 from rlbot_twitch_broker.action_and_server_id import AvailableActionsAndServerId
 from rlbot_twitch_broker.overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu
@@ -68,9 +69,10 @@ class TwitchChatAdapter(TwitchChatBot):
         chat_buffer.CHAT_BUFFER.enqueue_chat(ChatLine(username=sender, message=message))
 
 
-class TwitchBroker:
+class TwitchBroker(BaseScript):
 
     def __init__(self, overlay_folder: Path, twitch_auth: TwitchAuth):
+        super().__init__('TwitchBroker')
         self.json_file = overlay_folder / 'twitch_broker_overlay.json'
         self.chat_buffer = chat_buffer.CHAT_BUFFER
         self.menu_id = None
@@ -100,14 +102,13 @@ class TwitchBroker:
             overlay_data = generate_menu(all_actions, self.menu_id)
             self.write_json_for_overlay(overlay_data)
 
-            while not self.chat_buffer.has_chat():
-                self.twitch_chat_adapter.scan()
-                sleep(0.1)
-
-            while self.chat_buffer.has_chat():
+            while True:
+                while not self.chat_buffer.has_chat():
+                    self.twitch_chat_adapter.scan()
+                    sleep(0.1)
                 chat_line = self.chat_buffer.dequeue_chat()
                 text = chat_line.message
-                match = re.search(self.menu_id + '([0-9]+)', text)
+                match = re.search(self.menu_id + '([0-9]+)', text, re.IGNORECASE)
                 if match is not None:
                     choice_num = int(match.group(1))
                     choice = overlay_data.retrieve_choice(choice_num)
@@ -118,6 +119,7 @@ class TwitchBroker:
                     result = action_api.choose_action(ActionChoice(action=choice.bot_action))
                     # TODO: lionize chat_line.username
                     print(result)
+                    break
 
 
 def run_twitch_broker(desired_port: int, overlay_folder: Path, twitch_auth: TwitchAuth):

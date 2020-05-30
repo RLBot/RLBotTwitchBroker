@@ -26,6 +26,7 @@ class MyActionBroker(BotActionBroker):
     def set_action(self, choice: ActionChoice):
         self.current_action = choice.action
 
+
 class MyBot(BaseAgent):
 
     def __init__(self, name, team, index):
@@ -45,7 +46,8 @@ class MyBot(BaseAgent):
         twitch_broker_register = RegisterApi(ApiClient(configuration=register_api_config))
         while True:
             try:
-                twitch_broker_register.register_action_server(ActionServerRegistration(base_url=f"http://127.0.0.1:{port}"))
+                twitch_broker_register.register_action_server(
+                    ActionServerRegistration(base_url=f"http://127.0.0.1:{port}"))
             except MaxRetryError:
                 self.logger.warning('Failed to register with twitch broker, will try again...')
             sleep(10)
@@ -54,11 +56,22 @@ class MyBot(BaseAgent):
         actions = AvailableActions(entity_name="ActionBot", current_action=self.action_broker.current_action,
                                    available_actions=[
                                        BotAction(description="Turn left", action_type="turn", data={'value': -1}),
-                                       BotAction(description="Turn right", action_type="turn", data={'value': 1})])
+                                       BotAction(description="Drive straight", action_type="turn", data={'value': 0}),
+                                       BotAction(description="Turn right", action_type="turn", data={'value': 1}),
+                                       BotAction(description="Stop", action_type="throttle", data={'value': 0}),
+                                       BotAction(description="Go", action_type="throttle", data={'value': 1}),
+                                       BotAction(description="Boost", action_type="boost", data={'value': True}),
+                                       BotAction(description="Unboost", action_type="boost", data={'value': False}),
+                                   ])
         return [actions]
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
-        steer = 0
+        controls = SimpleControllerState()
         if self.action_broker.current_action:
-            steer = self.action_broker.current_action.data['value']
-        return SimpleControllerState(throttle=True, steer=steer)
+            if self.action_broker.current_action.action_type == 'turn':
+                controls.steer = self.action_broker.current_action.data['value']
+            if self.action_broker.current_action.action_type == 'throttle':
+                controls.throttle = self.action_broker.current_action.data['value']
+            if self.action_broker.current_action.action_type == 'boost':
+                controls.boost = self.action_broker.current_action.data['value']
+        return controls

@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     # Follow https://dev.twitch.tv/docs/irc/guide/ to get an oauth token, and just save it in a file
     # in this same directory.
-    with open('twitch.oauth.txt', 'r') as oauth_file:
+    with open(Path(__file__).parent / 'twitch.oauth.txt', 'r') as oauth_file:
         oauth = oauth_file.read()
 
     run_twitch_broker(STANDARD_TWITCH_BROKER_PORT, Path(__file__).parent / 'overlay',
