@@ -52,14 +52,15 @@ from rlbot_twitch_broker_client.rest import ApiException
 from pprint import pprint
 
 # create an instance of the API class
-api_instance = rlbot_twitch_broker_client.RegisterApi(rlbot_twitch_broker_client.ApiClient(configuration))
-body = rlbot_twitch_broker_client.ActionServerRegistration() # ActionServerRegistration | 
+api_instance = rlbot_twitch_broker_client.ChatApi(rlbot_twitch_broker_client.ApiClient(configuration))
+username = 'username_example' # str | 
+message = 'message_example' # str | 
 
 try:
-    api_response = api_instance.register_action_server(body)
+    api_response = api_instance.send_chat(username, message)
     pprint(api_response)
 except ApiException as e:
-    print("Exception when calling RegisterApi->register_action_server: %s\n" % e)
+    print("Exception when calling ChatApi->send_chat: %s\n" % e)
 ```
 
 ## Documentation for API Endpoints
@@ -68,12 +69,15 @@ All URIs are relative to */*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*ChatApi* | [**send_chat**](docs/ChatApi.md#send_chat) | **POST** /chat | 
 *RegisterApi* | [**register_action_server**](docs/RegisterApi.md#register_action_server) | **POST** /register/actionServer | 
+*StaticApi* | [**static_filename_get**](docs/StaticApi.md#static_filename_get) | **GET** /static/{filename} | 
 
 ## Documentation For Models
 
  - [ActionServerRegistration](docs/ActionServerRegistration.md)
  - [ApiResponse](docs/ApiResponse.md)
+ - [ChatLine](docs/ChatLine.md)
 
 ## Documentation For Authorization
 

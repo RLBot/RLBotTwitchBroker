@@ -23,4 +23,6 @@
 #!docs/README.md
 
 rlbot_twitch_broker_server/controllers/register_controller.py
+rlbot_twitch_broker_server/controllers/chat_controller.py
+rlbot_twitch_broker_server/controllers/static_controller.py
 rlbot_twitch_broker_server/util.py

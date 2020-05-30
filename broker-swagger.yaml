@@ -12,15 +12,20 @@ externalDocs:
   description: Find out more about RLBot
   url: http://www.rlbot.org/
 servers:
-- url: /
+  - url: /
 tags:
-- name: register
-  description: Allows bots to register themselves
+  - name: register
+    description: Allows bots to register themselves
+  - name: chat
+    description: Operations that allow chat interaction. A useful substitute
+      for twitch chat when testing.
+  - name: static
+    description: Serves static assets.
 paths:
   /register/actionServer:
     post:
       tags:
-      - register
+        - register
       operationId: registerActionServer
       requestBody:
         content:
@@ -37,6 +42,41 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         "400":
           description: Invalid status value
+  /chat:
+    post:
+      tags:
+        - chat
+      operationId: sendChat
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatLine'
+        required: true
+      responses:
+        "200":
+          description: successfully received chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /static/{filename}:
+    get:
+      tags:
+        - static
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: load static assets
+          content:
+            text/html:
+              schema:
+                type: string
 components:
   schemas:
     ActionServerRegistration:
@@ -58,3 +98,13 @@ components:
       example:
         code: 200
         message: Succesfully processed operation
+    ChatLine:
+      type: object
+      properties:
+        username:
+          type: string
+          example: GooseFairy
+        message:
+          type: string
+          example: XT6 is the command I want!
+

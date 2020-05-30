@@ -17,6 +17,11 @@ servers:
 tags:
 - name: register
   description: Allows bots to register themselves
+- name: chat
+  description: Operations that allow chat interaction. A useful substitute for twitch
+    chat when testing.
+- name: static
+  description: Serves static assets.
 paths:
   /register/actionServer:
     post:
@@ -39,6 +44,47 @@ paths:
         "400":
           description: Invalid status value
       x-openapi-router-controller: rlbot_twitch_broker_server.controllers.register_controller
+  /chat:
+    post:
+      tags:
+      - chat
+      operationId: send_chat
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChatLine'
+        required: true
+      responses:
+        "200":
+          description: successfully received chat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      x-openapi-router-controller: rlbot_twitch_broker_server.controllers.chat_controller
+  /static/{filename}:
+    get:
+      tags:
+      - static
+      operationId: static_filename_get
+      parameters:
+      - name: filename
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: load static assets
+          content:
+            text/html:
+              schema:
+                type: string
+                x-content-type: text/html
+      x-openapi-router-controller: rlbot_twitch_broker_server.controllers.static_controller
 components:
   schemas:
     ActionServerRegistration:
@@ -60,4 +106,13 @@ components:
       example:
         code: 200
         message: Succesfully processed operation
+    ChatLine:
+      type: object
+      properties:
+        username:
+          type: string
+          example: GooseFairy
+        message:
+          type: string
+          example: XT6 is the command I want!
 

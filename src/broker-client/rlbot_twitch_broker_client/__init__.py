@@ -15,10 +15,13 @@
 from __future__ import absolute_import
 
 # import apis into sdk package
+from rlbot_twitch_broker_client.api.chat_api import ChatApi
 from rlbot_twitch_broker_client.api.register_api import RegisterApi
+from rlbot_twitch_broker_client.api.static_api import StaticApi
 # import ApiClient
 from rlbot_twitch_broker_client.api_client import ApiClient
 from rlbot_twitch_broker_client.configuration import Configuration
 # import models into sdk package
 from rlbot_twitch_broker_client.models.action_server_registration import ActionServerRegistration
 from rlbot_twitch_broker_client.models.api_response import ApiResponse
+from rlbot_twitch_broker_client.models.chat_line import ChatLine

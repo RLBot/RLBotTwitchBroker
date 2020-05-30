@@ -1,0 +1,71 @@
+<!--TODO: Suggestions from Parzival:-->
+<!--Change the background color of divisions that already played, same for ones that are scheduled-->
+<!--Add time zone abbreviation-->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script
+            src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.2.2/jquery.form.min.js"
+            integrity="sha384-FzT3vTVGXqf7wRfy8k4BiyzvbNfeYjK+frTVqZeNDFl8woCbF0CYG6g2fMEFFo/i" crossorigin="anonymous"></script>
+
+</head>
+<body>
+    <div>
+        <form id="chat-form" action="/chat" method="post">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" />
+            <label for="message">Chat message</label>
+            <input type="text" id="message" name="message" />
+            <input type="submit" value="Send" />
+        </form>
+    </div>
+<script>
+    const chatForm = $('#chat-form');
+
+    chatForm.submit(function(){
+        $.post($(this).attr('action'), $(this).serialize(), function(response){
+            console.log(response);
+        },'json');
+        $("#message").val('');
+        return false;
+    });
+
+    // $('#chat-form').ajaxForm(function(response) {
+    //     $("#message").val('');
+    // });
+
+    // function getFormData($form){
+    //     var unindexed_array = $form.serializeArray();
+    //     var indexed_array = {};
+    //
+    //     $.map(unindexed_array, function(n, i){
+    //         indexed_array[n['name']] = n['value'];
+    //     });
+    //
+    //     return indexed_array;
+    // }
+    //
+    // chatForm.submit(function(){
+    //     console.log(getFormData($(this)));
+    //     $.ajax({
+    //         url: $(this).attr('action'),
+    //         type: "POST",
+    //         dataType: "json", // expected format for response
+    //         contentType: "application/json", // send as JSON
+    //         data: getFormData($(this)),
+    //         complete: function(response) {
+    //             console.log(response);
+    //         },
+    //     });
+    //     $("#message").val('');
+    //     return false;
+    // });
+</script>
+
+</body>
+</html>

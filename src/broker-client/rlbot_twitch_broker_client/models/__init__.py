@@ -16,3 +16,4 @@ from __future__ import absolute_import
 # import models into model package
 from rlbot_twitch_broker_client.models.action_server_registration import ActionServerRegistration
 from rlbot_twitch_broker_client.models.api_response import ApiResponse
+from rlbot_twitch_broker_client.models.chat_line import ChatLine
