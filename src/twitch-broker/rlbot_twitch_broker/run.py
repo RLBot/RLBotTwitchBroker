@@ -39,7 +39,7 @@ class AvailableActionAggregator:
 
     def fetch_all(self) -> List[AvailableActionsAndServerId]:
         registry = client_registry.CLIENT_REGISTRY
-        combined_actions: List[AvailableActionsAndServerId] = []
+        request_threads = []
         for client in list(registry.clients.values()):
             if client.base_url not in self.action_apis:
                 self.action_apis[client.get_key()] = self.make_action_api(client)
@@ -51,8 +51,13 @@ class AvailableActionAggregator:
             # When calling the same API via Chrome, it's lightning fast.
             # (I did this by visiting http://localhost:8080/action/currentlyAvailable )
             # I tried setting the request header Connection=keep-alive, but that didn't help.
-            combined_actions += [AvailableActionsAndServerId(a, client.get_key()) for a in
-                                 action_api.get_actions_currently_available()]
+            request_threads.append((client.get_key(), action_api.get_actions_currently_available(
+                async_req=True, _request_timeout=0.2)))
+
+        combined_actions: List[AvailableActionsAndServerId] = []
+        for (client_key, req) in request_threads:
+            avail_actions_list = req.get()
+            combined_actions += [AvailableActionsAndServerId(a, client_key) for a in avail_actions_list]
 
         return combined_actions
 
