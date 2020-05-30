@@ -84,7 +84,7 @@ components:
       properties:
         baseUrl:
           type: string
-          example: 'http://localhost:8080'
+          example: 'http://127.0.0.1:8080'
     ApiResponse:
       type: object
       properties:

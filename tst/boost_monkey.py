@@ -38,12 +38,12 @@ class BoostMonkey(BaseScript):
 
     def heartbeat_connection_attempts_to_twitch_broker(self, port):
         register_api_config = Configuration()
-        register_api_config.host = f"http://localhost:{STANDARD_TWITCH_BROKER_PORT}"
+        register_api_config.host = f"http://127.0.0.1:{STANDARD_TWITCH_BROKER_PORT}"
         twitch_broker_register = RegisterApi(ApiClient(configuration=register_api_config))
         while True:
             try:
                 twitch_broker_register.register_action_server(
-                    ActionServerRegistration(base_url=f"http://localhost:{port}"))
+                    ActionServerRegistration(base_url=f"http://127.0.0.1:{port}"))
             except MaxRetryError:
                 self.logger.warning('Failed to register with twitch broker, will try again...')
             sleep(10)

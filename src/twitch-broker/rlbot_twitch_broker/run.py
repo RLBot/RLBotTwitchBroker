@@ -49,7 +49,7 @@ class AvailableActionAggregator:
             # For some reason these API calls are slow as molasses
             # After stepping through, it seems like we take about 1 second to form a connection.
             # When calling the same API via Chrome, it's lightning fast.
-            # (I did this by visiting http://localhost:8080/action/currentlyAvailable )
+            # (I did this by visiting http://127.0.0.1:8080/action/currentlyAvailable )
             # I tried setting the request header Connection=keep-alive, but that didn't help.
             request_threads.append((client.get_key(), action_api.get_actions_currently_available(
                 async_req=True, _request_timeout=0.2)))
@@ -195,7 +195,7 @@ class TwitchBroker:
 
 
 def run_twitch_broker(desired_port: int, overlay_folder: Path):
-    # Open up http://localhost:7307/static/chat_form.html if you want to send test commands without
+    # Open up http://127.0.0.1:7307/static/chat_form.html if you want to send test commands without
     # connecting to twitch.
     # Open the overlay (the html file in overlay_folder to see what actions you can enter in chat.
     # You can open it via IntelliJ's html preview, or an OBS scene, both of these start a little mini server
