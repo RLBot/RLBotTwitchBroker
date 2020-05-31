@@ -9,8 +9,10 @@ def choose_action(body):
         body = ActionChoice.from_dict(connexion.request.get_json())
         action_broker = bot_holder.get_bot_action_broker()
         if action_broker is not None:
-            action_broker.set_action(body)
-            return ApiResponse(200, f'Successfully set action: {body.action.description}')
+            response = action_broker.set_action(body)
+            if response:
+                return response
+            return ApiResponse(200, f'Probably set action: {body.action.description}')
 
 
 def get_actions_currently_available():

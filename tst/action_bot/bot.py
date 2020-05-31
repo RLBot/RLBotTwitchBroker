@@ -8,7 +8,7 @@ from rlbot.utils.structures.game_data_struct import GameTickPacket
 from rlbot_action_client import ApiClient, Configuration
 from rlbot_action_server.bot_action_broker import BotActionBroker, run_action_server, find_usable_port
 from rlbot_action_server.bot_holder import set_bot_action_broker
-from rlbot_action_server.models import BotAction, AvailableActions, ActionChoice
+from rlbot_action_server.models import BotAction, AvailableActions, ActionChoice, ApiResponse
 from rlbot_twitch_broker_client import ActionServerRegistration
 from rlbot_twitch_broker_client.api.register_api import RegisterApi
 from rlbot_twitch_broker_client.defaults import STANDARD_TWITCH_BROKER_PORT
@@ -25,6 +25,7 @@ class MyActionBroker(BotActionBroker):
 
     def set_action(self, choice: ActionChoice):
         self.current_action = choice.action
+        return ApiResponse(200, f"Action bot shall {self.current_action.description}")
 
 
 class MyBot(BaseAgent):

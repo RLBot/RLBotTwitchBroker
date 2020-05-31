@@ -6,7 +6,7 @@ from rlbot.utils.game_state_util import CarState, GameState
 from rlbot.utils.structures.game_data_struct import PlayerInfo
 from rlbot_action_server.bot_action_broker import BotActionBroker, run_action_server, find_usable_port
 from rlbot_action_server.bot_holder import set_bot_action_broker
-from rlbot_action_server.models import BotAction, AvailableActions, ActionChoice
+from rlbot_action_server.models import BotAction, AvailableActions, ActionChoice, ApiResponse
 from rlbot_twitch_broker_client import Configuration, RegisterApi, ApiClient, ActionServerRegistration
 from rlbot_twitch_broker_client.defaults import STANDARD_TWITCH_BROKER_PORT
 from time import sleep
@@ -27,6 +27,7 @@ class MyActionBroker(BotActionBroker):
 
     def set_action(self, choice: ActionChoice):
         self.current_action = choice.action
+        return ApiResponse(200, f"The monkey shall {self.current_action.description}")
 
 
 class BoostMonkey(BaseScript):
