@@ -8,8 +8,8 @@ from typing import List, Dict
 from rlbot.agents.base_script import BaseScript
 from rlbot.utils.game_state_util import GameState, GameInfoState
 from rlbot_action_client import Configuration, ActionApi, ApiClient, ActionChoice
-from rlbot_twitch_broker.action_and_server_id import AvailableActionsAndServerId
-from rlbot_twitch_broker.overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu, \
+from .action_and_server_id import AvailableActionsAndServerId
+from .overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu, \
     CommandAcknowledgement
 from rlbot_twitch_broker_client.models.chat_line import ChatLine
 from rlbot_twitch_broker_server import chat_buffer
@@ -160,12 +160,3 @@ class TwitchBroker(BaseScript):
                                 self.set_game_state(GameState(game_info=GameInfoState(game_speed=1)))
                                 sleep(self.broker_settings.play_time_between_pauses)
                         break
-
-
-def run_twitch_broker(desired_port: int, overlay_folder: Path, twitch_auth: TwitchAuth, settings: MutableBrokerSettings):
-    # Open up http://127.0.0.1:7307/static/chat_form.html if you want to send test commands without
-    # connecting to twitch.
-    # Open the overlay (the html file in overlay_folder to see what actions you can enter in chat.
-    # You can open it via IntelliJ's html preview, or an OBS scene, both of these start a little mini server
-    # so it can access the json successfully. Opening the overlay file directly in a web browser won't work.
-    TwitchBroker(overlay_folder, twitch_auth, settings).run_loop_with_chat_buffer(desired_port)

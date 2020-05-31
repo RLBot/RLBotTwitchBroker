@@ -1,11 +1,11 @@
 java -jar swagger-codegen-cli-3.0.20.jar generate^
    -i action-swagger.yaml^
    -l python-flask^
-   -o src\action-server^
+   -o swagger\action-server^
    -DpackageName=rlbot_action_server
 
 java -jar swagger-codegen-cli-3.0.20.jar generate^
    -i action-swagger.yaml^
    -l python^
-   -o src\action-client^
+   -o swagger\action-client^
    -DpackageName=rlbot_action_client

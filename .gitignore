@@ -64,5 +64,3 @@ target/
 .ipynb_checkpoints
 
 .idea/
-tst/overlay/twitch_broker_overlay.json
-tst/twitch.oauth.txt
