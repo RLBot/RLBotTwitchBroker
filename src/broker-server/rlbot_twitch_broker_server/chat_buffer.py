@@ -12,7 +12,7 @@ class ChatBuffer:
     def enqueue_chat(self, chat: ChatLine):
         self.chat_lines.append(chat)
 
-    def dequeue_chat(self):
+    def dequeue_chat(self) -> ChatLine:
         return self.chat_lines.pop(0)
 
     def has_chat(self):

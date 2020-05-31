@@ -15,6 +15,14 @@ class NumberedAction:
         self.action = action
 
 
+@dataclass
+class CommandAcknowledgement:
+    username: str
+    description: str
+    status: str
+    id: str
+
+
 def create_section(act_and_server: AvailableActionsAndServerId, counter: itertools.count):
     return CommandSection(header=act_and_server.available_actions.entity_name,
                           action_server_id=act_and_server.action_server_id,
@@ -26,9 +34,10 @@ def generate_menu_id():
     return ''.join(random.choice(string.ascii_uppercase) for _ in range(2))
 
 
-def generate_menu(list: List[AvailableActionsAndServerId], menu_id: str):
+def generate_menu(list: List[AvailableActionsAndServerId], menu_id: str, recent_commands: List[CommandAcknowledgement]):
     counter = itertools.count(1)
-    return OverlayData(menu_id=menu_id, sections=[create_section(s, counter) for s in list])
+    return OverlayData(menu_id=menu_id, sections=[create_section(s, counter) for s in list],
+                       recent_commands=recent_commands)
 
 
 @dataclass
@@ -42,6 +51,7 @@ class CommandSection:
 class OverlayData:
     menu_id: str
     sections: List[CommandSection]
+    recent_commands: List[CommandAcknowledgement]
 
     def retrieve_choice(self, choice_num: int) -> ActionAndServerId:
         for section in self.sections:

@@ -12,7 +12,7 @@ VERSION = "1.0.0"
 # prerequisite: setuptools
 # http://pypi.python.org/pypi/setuptools
 
-REQUIRES = ["rlbot_twitch_broker_server", "rlbot_action_client"]
+REQUIRES = ["rlbot_twitch_broker_server", "rlbot_action_client", "twitchio"]
 
 setup(
     name=NAME,

@@ -8,14 +8,16 @@ from typing import List, Dict
 from rlbot.agents.base_script import BaseScript
 from rlbot_action_client import Configuration, ActionApi, ApiClient, ActionChoice
 from rlbot_twitch_broker.action_and_server_id import AvailableActionsAndServerId
-from rlbot_twitch_broker.overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu
-from rlbot_twitch_broker.twitch_chat_bot import TwitchChatBot
+from rlbot_twitch_broker.overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu, \
+    CommandAcknowledgement
 from rlbot_twitch_broker_client.models.chat_line import ChatLine
 from rlbot_twitch_broker_server import chat_buffer
 from rlbot_twitch_broker_server import client_registry
 from rlbot_twitch_broker_server.client_registry import ActionServerData
 from rlbot_twitch_broker_server.run import find_usable_port, run_twitch_broker_server
 from time import sleep
+from twitchio import Message
+from twitchio.ext.commands import Bot as TwitchBot
 
 
 class AvailableActionAggregator:
@@ -61,12 +63,12 @@ class TwitchAuth:
     channel: str
 
 
-class TwitchChatAdapter(TwitchChatBot):
+class TwitchChatAdapter(TwitchBot):
     def __init__(self, twitch_auth: TwitchAuth):
-        super().__init__(twitch_auth.username, twitch_auth.oauth, twitch_auth.channel)
+        super().__init__(nick=twitch_auth.username, irc_token=twitch_auth.oauth, initial_channels=[twitch_auth.channel], prefix='!rlb')
 
-    def on_message(self, sender, message):
-        chat_buffer.CHAT_BUFFER.enqueue_chat(ChatLine(username=sender, message=message))
+    async def event_message(self, message: Message):
+        chat_buffer.CHAT_BUFFER.enqueue_chat(ChatLine(username=message.author.display_name, message=message.content))
 
 
 class TwitchBroker(BaseScript):
@@ -79,6 +81,9 @@ class TwitchBroker(BaseScript):
         self.twitch_chat_adapter = None
         if twitch_auth:
             self.twitch_chat_adapter = TwitchChatAdapter(twitch_auth)
+            twitch_thread = Thread(target=self.twitch_chat_adapter.run)
+            twitch_thread.setDaemon(True)
+            twitch_thread.start()
 
     def write_json_for_overlay(self, overlay_data: OverlayData):
         json_string = json.dumps(overlay_data, default=serialize_for_overlay)
@@ -93,33 +98,48 @@ class TwitchBroker(BaseScript):
 
         aggregator = AvailableActionAggregator()
 
+        command_count = 0
+        recent_commands = []
+        recent_menus = []
+
         while True:
             all_actions = aggregator.fetch_all()
             if len(all_actions) == 0:
                 sleep(0.1)
                 continue
             self.menu_id = generate_menu_id()
-            overlay_data = generate_menu(all_actions, self.menu_id)
+            overlay_data = generate_menu(all_actions, self.menu_id, recent_commands)
             self.write_json_for_overlay(overlay_data)
+            recent_menus.insert(0, overlay_data)
+            if len(recent_menus) > 3:
+                recent_menus.pop()
 
-            while True:
+            made_selection_on_latest_menu = False
+            while not made_selection_on_latest_menu:
                 while not self.chat_buffer.has_chat():
-                    self.twitch_chat_adapter.scan()
                     sleep(0.1)
                 chat_line = self.chat_buffer.dequeue_chat()
                 text = chat_line.message
-                match = re.search(self.menu_id + '([0-9]+)', text, re.IGNORECASE)
-                if match is not None:
-                    choice_num = int(match.group(1))
-                    choice = overlay_data.retrieve_choice(choice_num)
-                    if choice is None:
-                        print(f"Invalid choice number {choice_num}")
-                        continue
-                    action_api = aggregator.get_action_api(choice.action_server_id)
-                    result = action_api.choose_action(ActionChoice(action=choice.bot_action))
-                    # TODO: lionize chat_line.username
-                    print(result)
-                    break
+                for menu_index, menu in enumerate(recent_menus):
+                    match = re.search(menu.menu_id + '([0-9]+)', text, re.IGNORECASE)
+                    if match is not None:
+                        choice_num = int(match.group(1))
+                        choice = menu.retrieve_choice(choice_num)
+                        if not choice:
+                            print(f"Invalid choice number {choice_num}")
+                            continue
+                        action_api = aggregator.get_action_api(choice.action_server_id)
+                        result = action_api.choose_action(ActionChoice(action=choice.bot_action))
+                        command_count += 1
+                        recent_commands.append(CommandAcknowledgement(chat_line.username, choice.bot_action.description, "success", str(command_count)))
+                        if len(recent_commands) > 10:
+                            recent_commands.pop(0)  # Get rid of the oldest command
+                        if menu_index == 0:
+                            made_selection_on_latest_menu = True
+                        else:
+                            # This causes the new command acknowledgement to get published.
+                            self.write_json_for_overlay(overlay_data)
+                        break
 
 
 def run_twitch_broker(desired_port: int, overlay_folder: Path, twitch_auth: TwitchAuth):
