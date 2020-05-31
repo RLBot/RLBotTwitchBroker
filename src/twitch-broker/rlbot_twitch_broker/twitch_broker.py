@@ -6,6 +6,7 @@ from threading import Thread
 from typing import List, Dict
 
 from rlbot.agents.base_script import BaseScript
+from rlbot.utils.game_state_util import GameState, GameInfoState
 from rlbot_action_client import Configuration, ActionApi, ApiClient, ActionChoice
 from rlbot_twitch_broker.action_and_server_id import AvailableActionsAndServerId
 from rlbot_twitch_broker.overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu, \
@@ -71,14 +72,22 @@ class TwitchChatAdapter(TwitchBot):
         chat_buffer.CHAT_BUFFER.enqueue_chat(ChatLine(username=message.author.display_name, message=message.content))
 
 
+@dataclass
+class MutableBrokerSettings:
+    num_old_menus_to_honor: int = 0
+    pause_on_menu: bool = False
+    play_time_between_pauses: int = 5
+
+
 class TwitchBroker(BaseScript):
 
-    def __init__(self, overlay_folder: Path, twitch_auth: TwitchAuth):
+    def __init__(self, overlay_folder: Path, twitch_auth: TwitchAuth, broker_settings: MutableBrokerSettings):
         super().__init__('TwitchBroker')
         self.json_file = overlay_folder / 'twitch_broker_overlay.json'
         self.chat_buffer = chat_buffer.CHAT_BUFFER
         self.menu_id = None
         self.twitch_chat_adapter = None
+        self.broker_settings = broker_settings
         if twitch_auth:
             self.twitch_chat_adapter = TwitchChatAdapter(twitch_auth)
             twitch_thread = Thread(target=self.twitch_chat_adapter.run)
@@ -103,6 +112,13 @@ class TwitchBroker(BaseScript):
         recent_menus = []
 
         while True:
+            packet = self.get_game_tick_packet()
+            while not packet.game_info.is_round_active:
+                sleep(.2)
+                packet = self.get_game_tick_packet()
+            if self.broker_settings.pause_on_menu:
+                self.set_game_state(GameState(game_info=GameInfoState(game_speed=0.01)))
+
             all_actions = aggregator.fetch_all()
             if len(all_actions) == 0:
                 sleep(0.1)
@@ -111,7 +127,7 @@ class TwitchBroker(BaseScript):
             overlay_data = generate_menu(all_actions, self.menu_id, recent_commands)
             self.write_json_for_overlay(overlay_data)
             recent_menus.insert(0, overlay_data)
-            if len(recent_menus) > 3:
+            if len(recent_menus) > self.broker_settings.num_old_menus_to_honor + 1:
                 recent_menus.pop()
 
             made_selection_on_latest_menu = False
@@ -134,18 +150,22 @@ class TwitchBroker(BaseScript):
                         recent_commands.append(CommandAcknowledgement(chat_line.username, choice.bot_action.description, "success", str(command_count)))
                         if len(recent_commands) > 10:
                             recent_commands.pop(0)  # Get rid of the oldest command
+
+                        # This causes the new command acknowledgement to get published. The overlay_data has an
+                        # internal reference to recent_commands.
+                        self.write_json_for_overlay(overlay_data)
                         if menu_index == 0:
                             made_selection_on_latest_menu = True
-                        else:
-                            # This causes the new command acknowledgement to get published.
-                            self.write_json_for_overlay(overlay_data)
+                            if self.broker_settings.pause_on_menu:
+                                self.set_game_state(GameState(game_info=GameInfoState(game_speed=1)))
+                                sleep(self.broker_settings.play_time_between_pauses)
                         break
 
 
-def run_twitch_broker(desired_port: int, overlay_folder: Path, twitch_auth: TwitchAuth):
+def run_twitch_broker(desired_port: int, overlay_folder: Path, twitch_auth: TwitchAuth, settings: MutableBrokerSettings):
     # Open up http://127.0.0.1:7307/static/chat_form.html if you want to send test commands without
     # connecting to twitch.
     # Open the overlay (the html file in overlay_folder to see what actions you can enter in chat.
     # You can open it via IntelliJ's html preview, or an OBS scene, both of these start a little mini server
     # so it can access the json successfully. Opening the overlay file directly in a web browser won't work.
-    TwitchBroker(overlay_folder, twitch_auth).run_loop_with_chat_buffer(desired_port)
+    TwitchBroker(overlay_folder, twitch_auth, settings).run_loop_with_chat_buffer(desired_port)

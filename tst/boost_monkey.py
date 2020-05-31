@@ -86,7 +86,7 @@ class BoostMonkey(BaseScript):
         for player in self.known_players:
             actions.append(BotAction(description=f'Give {player.name} full boost', action_type=GIVE_FULL_BOOST,
                                      data={PLAYER_NAME: player.name}))
-            actions.append(BotAction(description=f'Take boost away from {player.name}', action_type=REMOVE_BOOST,
+            actions.append(BotAction(description=f'Drain all boost from {player.name}', action_type=REMOVE_BOOST,
                                      data={PLAYER_NAME: player.name}))
 
         return [AvailableActions("Boost Monkey", None, actions)]

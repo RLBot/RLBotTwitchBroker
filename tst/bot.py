@@ -32,6 +32,7 @@ class MyBot(BaseAgent):
     def __init__(self, name, team, index):
         super().__init__(name, team, index)
         self.action_broker = MyActionBroker(self)
+        self.controls = SimpleControllerState()
 
     def initialize_agent(self):
         port = find_usable_port(8080)
@@ -66,12 +67,11 @@ class MyBot(BaseAgent):
         return [actions]
 
     def get_output(self, packet: GameTickPacket) -> SimpleControllerState:
-        controls = SimpleControllerState()
         if self.action_broker.current_action:
             if self.action_broker.current_action.action_type == 'turn':
-                controls.steer = self.action_broker.current_action.data['value']
+                self.controls.steer = self.action_broker.current_action.data['value']
             if self.action_broker.current_action.action_type == 'throttle':
-                controls.throttle = self.action_broker.current_action.data['value']
+                self.controls.throttle = self.action_broker.current_action.data['value']
             if self.action_broker.current_action.action_type == 'boost':
-                controls.boost = self.action_broker.current_action.data['value']
-        return controls
+                self.controls.boost = self.action_broker.current_action.data['value']
+        return self.controls

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from rlbot_twitch_broker.twitch_broker import run_twitch_broker, TwitchAuth
+from rlbot_twitch_broker.twitch_broker import run_twitch_broker, TwitchAuth, MutableBrokerSettings
 from rlbot_twitch_broker_client.defaults import STANDARD_TWITCH_BROKER_PORT
 
 if __name__ == '__main__':
@@ -9,6 +9,6 @@ if __name__ == '__main__':
     # in this same directory.
     with open(Path(__file__).parent / 'twitch.oauth.txt', 'r') as oauth_file:
         oauth = oauth_file.read()
-
+    settings = MutableBrokerSettings(num_old_menus_to_honor=2, pause_on_menu=True)
     run_twitch_broker(STANDARD_TWITCH_BROKER_PORT, Path(__file__).parent / 'overlay',
-                      TwitchAuth('tarehart', oauth, '#tarehart'))
+                      TwitchAuth('tarehart', oauth, '#tarehart'), settings)
