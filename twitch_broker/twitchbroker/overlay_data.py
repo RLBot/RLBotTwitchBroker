@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import List
 
 from rlbot_action_client.models import BotAction
-from .action_and_server_id import AvailableActionsAndServerId, ActionAndServerId
+from twitchbroker.action_and_server_id import AvailableActionsAndServerId, ActionAndServerId
 
 
 class NumberedAction:

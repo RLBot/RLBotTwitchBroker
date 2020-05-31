@@ -8,8 +8,8 @@ from typing import List, Dict
 from rlbot.agents.base_script import BaseScript
 from rlbot.utils.game_state_util import GameState, GameInfoState
 from rlbot_action_client import Configuration, ActionApi, ApiClient, ActionChoice
-from .action_and_server_id import AvailableActionsAndServerId
-from .overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu, \
+from twitchbroker.action_and_server_id import AvailableActionsAndServerId
+from twitchbroker.overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu, \
     CommandAcknowledgement
 from rlbot_twitch_broker_client.models.chat_line import ChatLine
 from rlbot_twitch_broker_server import chat_buffer

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from rlbot_twitch_broker_client.defaults import STANDARD_TWITCH_BROKER_PORT
 
-from .src.twitch_broker import TwitchAuth, MutableBrokerSettings, TwitchBroker
+from twitchbroker.twitch_broker import TwitchAuth, MutableBrokerSettings, TwitchBroker
 
 if __name__ == '__main__':
 
