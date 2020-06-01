@@ -20,14 +20,13 @@ PLAYER_NAME = 'playerName'
 class MyActionBroker(BotActionBroker):
     def __init__(self, script):
         self.script = script
-        self.current_action: BotAction = None
 
     def get_actions_currently_available(self) -> List[AvailableActions]:
         return self.script.get_actions_currently_available()
 
     def set_action(self, choice: ActionChoice):
-        self.current_action = choice.action
-        return ApiResponse(200, f"The monkey shall {self.current_action.description}")
+        self.script.process_choice(choice.action)
+        return ApiResponse(200, f"The monkey shall {choice.action.description}")
 
 
 class BoostMonkey(BaseScript):
@@ -49,6 +48,15 @@ class BoostMonkey(BaseScript):
                 self.logger.warning('Failed to register with twitch broker, will try again...')
             sleep(10)
 
+    def process_choice(self, choice: BotAction):
+        boost_amount = 0
+        if choice.action_type == GIVE_FULL_BOOST:
+            boost_amount = 100
+        player_index = self.get_player_index_by_name(choice.data[PLAYER_NAME])
+        if player_index is not None:
+            self.set_game_state(
+                GameState(cars={player_index: CarState(boost_amount=boost_amount)}))
+
     def start(self):
         port = find_usable_port(9097)
         Thread(target=run_action_server, args=(port,), daemon=True).start()
@@ -61,18 +69,6 @@ class BoostMonkey(BaseScript):
             raw_players = [self.game_tick_packet.game_cars[i]
                            for i in range(packet.num_cars)]
             self.known_players = [p for p in raw_players if p.name]
-
-            current_action: BotAction = self.action_broker.current_action
-            if current_action:
-                boost_amount = 0
-                if current_action.action_type == GIVE_FULL_BOOST:
-                    boost_amount = 100
-                player_index = self.get_player_index_by_name(current_action.data[PLAYER_NAME])
-                if player_index is not None:
-                    self.set_game_state(
-                        GameState(cars={player_index: CarState(boost_amount=boost_amount)}))
-                self.action_broker.current_action = None
-
             sleep(0.5)
 
     def get_player_index_by_name(self, name: str):
