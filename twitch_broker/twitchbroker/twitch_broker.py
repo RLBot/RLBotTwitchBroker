@@ -112,6 +112,9 @@ class TwitchBroker(BaseScript):
         recent_menus = []
         stop_list = set()
 
+        overlay_data = OverlayData('', [], [])
+        self.write_json_for_overlay(overlay_data)
+
         while True:
             packet = self.get_game_tick_packet()
             while not packet.game_info.is_round_active:

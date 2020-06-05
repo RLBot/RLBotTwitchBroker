@@ -31,6 +31,10 @@
             if (dataString !== previousData) {
 
                 overlayDiv.empty();
+                if (data.sections.length === 0) {
+                    overlayDiv.append($('<div class="section"><div class="section-header">Ready</div></div>'))
+                }
+
                 for (let i = 0; i < data.sections.length; i++) {
 
                     const sectionDiv = $('<div class="section"></div>');
@@ -78,6 +82,9 @@
                 }
                 previousData = dataString;
             }
+        }).fail(function(err) {
+            overlayDiv.empty();
+            overlayDiv.append($('<div class="section"><div class="section-header">Ready</div></div>'));
         });
     }, 500);
 </script>
