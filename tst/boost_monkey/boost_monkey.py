@@ -51,7 +51,8 @@ class BoostMonkey(BaseScript):
     def process_choice(self, choice: BotAction):
         boost_amount = 0
         if choice.action_type == GIVE_FULL_BOOST:
-            boost_amount = 100
+            # People can't see that they have full boost on the client side, and will be unable to either boost or pick up pads if it's on 100!
+            boost_amount = 98
         player_index = self.get_player_index_by_name(choice.data[PLAYER_NAME])
         if player_index is not None:
             self.set_game_state(

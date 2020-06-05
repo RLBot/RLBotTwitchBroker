@@ -62,6 +62,7 @@
 
                     for (let i = previousCmdIndex + 1; i < data.recent_commands.length; i++) {
                         let cmd = data.recent_commands[i];
+                        // https://kamranahmed.info/toast
                         $.toast({
                             heading: cmd.username,
                             text: cmd.description,
@@ -70,6 +71,7 @@
                             hideAfter: 4000,
                             loader: false,
                             allowToastClose: false,
+                            stack: 3,
                         });
                         latestCommandId = cmd.id;
                     }

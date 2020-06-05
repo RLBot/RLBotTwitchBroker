@@ -110,6 +110,7 @@ class TwitchBroker(BaseScript):
         command_count = 0
         recent_commands = []
         recent_menus = []
+        stop_list = set()
 
         while True:
             packet = self.get_game_tick_packet()
@@ -138,7 +139,8 @@ class TwitchBroker(BaseScript):
                 text = chat_line.message
                 for menu_index, menu in enumerate(recent_menus):
                     match = re.search(menu.menu_id + '([0-9]+)', text, re.IGNORECASE)
-                    if match is not None:
+                    stop_string = f'{match}{chat_line.username}'
+                    if match is not None and stop_string not in stop_list:
                         choice_num = int(match.group(1))
                         choice = menu.retrieve_choice(choice_num)
                         if not choice:
@@ -148,6 +150,7 @@ class TwitchBroker(BaseScript):
                         result = action_api.choose_action(ActionChoice(action=choice.bot_action))
                         command_count += 1
                         recent_commands.append(CommandAcknowledgement(chat_line.username, choice.bot_action.description, "success", str(command_count)))
+                        stop_list.add(stop_string)
                         if len(recent_commands) > 10:
                             recent_commands.pop(0)  # Get rid of the oldest command
 
