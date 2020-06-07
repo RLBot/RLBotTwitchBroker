@@ -7,6 +7,7 @@ from rlbot.utils.structures.game_data_struct import PlayerInfo
 from rlbot_action_server.bot_action_broker import BotActionBroker, run_action_server, find_usable_port
 from rlbot_action_server.bot_holder import set_bot_action_broker
 from rlbot_action_server.models import BotAction, AvailableActions, ActionChoice, ApiResponse
+from rlbot_action_server.formatting_utils import highlight_player_name
 from rlbot_twitch_broker_client import Configuration, RegisterApi, ApiClient, ActionServerRegistration
 from rlbot_twitch_broker_client.defaults import STANDARD_TWITCH_BROKER_PORT
 from time import sleep
@@ -82,9 +83,11 @@ class BoostMonkey(BaseScript):
     def get_actions_currently_available(self) -> List[AvailableActions]:
         actions = []
         for player in self.known_players:
-            actions.append(BotAction(description=f'Give {player.name} full boost', action_type=GIVE_FULL_BOOST,
+            actions.append(BotAction(description=f'Give {highlight_player_name(player)} full boost',
+                                     action_type=GIVE_FULL_BOOST,
                                      data={PLAYER_NAME: player.name}))
-            actions.append(BotAction(description=f'Drain all boost from {player.name}', action_type=REMOVE_BOOST,
+            actions.append(BotAction(description=f'Drain all boost from {highlight_player_name(player)}',
+                                     action_type=REMOVE_BOOST,
                                      data={PLAYER_NAME: player.name}))
 
         return [AvailableActions("Boost Monkey", None, actions)]
