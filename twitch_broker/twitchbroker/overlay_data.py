@@ -35,10 +35,14 @@ def generate_menu_id():
     return ''.join(random.choice(string.ascii_uppercase) for _ in range(2))
 
 
-def generate_menu(list: List[AvailableActionsAndServerId], menu_id: str, recent_commands: List[CommandAcknowledgement]):
+def generate_menu(list: List[AvailableActionsAndServerId], menu_id: str,
+                  recent_commands: List[CommandAcknowledgement], packet: GameTickPacket) -> 'OverlayData':
+
+    raw_players = [packet.game_cars[i] for i in range(packet.num_cars)]
+    players = [PlayerData(p.name, p.team) for p in raw_players if p.name]
     counter = itertools.count(1)
     return OverlayData(menu_id=menu_id, sections=[create_section(s, counter) for s in list],
-                       recent_commands=recent_commands)
+                       recent_commands=recent_commands, players=players)
 
 
 @dataclass
@@ -49,10 +53,17 @@ class CommandSection:
 
 
 @dataclass
+class PlayerData:
+    name: str
+    team: int
+
+
+@dataclass
 class OverlayData:
     menu_id: str
     sections: List[CommandSection]
     recent_commands: List[CommandAcknowledgement]
+    players: List[PlayerData]
 
     def retrieve_choice(self, choice_num: int) -> ActionAndServerId:
         for section in self.sections:
@@ -72,19 +83,3 @@ def serialize_for_overlay(o):
     if hasattr(o, 'to_dict'):
         return o.to_dict()
     return o.__dict__
-
-
-def get_highlighted_player_name(player: PlayerInfo) -> str:
-    color = '#1E90FF' if player.team == 0 else '#FF8C00'
-    return f'<b style="color: {color}">{player.name}</b>'
-
-
-def highlight_player_names(overlay_data: OverlayData, packet: GameTickPacket):
-    players = [packet.game_cars[i] for i in range(packet.num_cars)]
-
-    for section in overlay_data.sections:
-        for action in section.actions:
-            for player in players:
-                if player.name in action.action.description:
-                    action.action.description = action.action.description.replace(
-                        player.name, get_highlighted_player_name(player))
