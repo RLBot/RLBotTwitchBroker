@@ -1,7 +1,7 @@
+import configparser
 import tkinter
 from pathlib import Path
 from tkinter import simpledialog
-import configparser
 
 from rlbot_twitch_broker_client.defaults import STANDARD_TWITCH_BROKER_PORT
 
@@ -42,9 +42,9 @@ if __name__ == '__main__':
     if 'BrokerConfig' in config:
         brokerconf = config['BrokerConfig']
         if 'num_old_menus_to_honor' in brokerconf:
-            num_old_menus_to_honor = int(brokerconf['num_old_menus_to_honor'])
+            num_old_menus_to_honor = brokerconf.getint('num_old_menus_to_honor')
         if 'pause_on_menu' in brokerconf:
-            pause_on_menu = bool(brokerconf['pause_on_menu'])
+            pause_on_menu = brokerconf.getboolean('pause_on_menu')
 
     settings = MutableBrokerSettings(num_old_menus_to_honor=num_old_menus_to_honor, pause_on_menu=pause_on_menu)
 

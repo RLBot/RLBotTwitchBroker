@@ -121,7 +121,7 @@ class TwitchBroker(BaseScript):
             while not packet.game_info.is_round_active:
                 sleep(.2)
                 packet = self.get_game_tick_packet()
-            if self.broker_settings.pause_on_menu:
+            if self.broker_settings.pause_on_menu and overlay_data.num_actions() > 0:
                 self.set_game_state(GameState(game_info=GameInfoState(game_speed=0.01)))
 
             all_actions = aggregator.fetch_all()

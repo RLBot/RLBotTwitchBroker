@@ -61,6 +61,12 @@ class OverlayData:
                     return ActionAndServerId(action.action, section.action_server_id)
         return None
 
+    def num_actions(self) -> int:
+        count = 0
+        for section in self.sections:
+            count += len(section.actions)
+        return count
+
 
 def serialize_for_overlay(o):
     if hasattr(o, 'to_dict'):
