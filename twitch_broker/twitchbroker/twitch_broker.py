@@ -10,7 +10,7 @@ from rlbot.utils.game_state_util import GameState, GameInfoState
 from rlbot_action_client import Configuration, ActionApi, ApiClient, ActionChoice
 from twitchbroker.action_and_server_id import AvailableActionsAndServerId
 from twitchbroker.overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu, \
-    CommandAcknowledgement
+    CommandAcknowledgement, highlight_player_names
 from rlbot_twitch_broker_client.models.chat_line import ChatLine
 from rlbot_twitch_broker_server import chat_buffer
 from rlbot_twitch_broker_server import client_registry
@@ -95,6 +95,7 @@ class TwitchBroker(BaseScript):
             twitch_thread.start()
 
     def write_json_for_overlay(self, overlay_data: OverlayData):
+        highlight_player_names(overlay_data, self.game_tick_packet)
         json_string = json.dumps(overlay_data, default=serialize_for_overlay)
         self.json_file.write_text(json_string)
 

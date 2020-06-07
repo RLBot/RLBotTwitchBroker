@@ -5,6 +5,7 @@ import itertools
 from dataclasses import dataclass
 from typing import List
 
+from rlbot.utils.structures.game_data_struct import GameTickPacket, PlayerInfo
 from rlbot_action_client.models import BotAction
 from twitchbroker.action_and_server_id import AvailableActionsAndServerId, ActionAndServerId
 
@@ -65,3 +66,19 @@ def serialize_for_overlay(o):
     if hasattr(o, 'to_dict'):
         return o.to_dict()
     return o.__dict__
+
+
+def get_highlighted_player_name(player: PlayerInfo) -> str:
+    color = '#1E90FF' if player.team == 0 else '#FF8C00'
+    return f'<b style="color: {color}">{player.name}</b>'
+
+
+def highlight_player_names(overlay_data: OverlayData, packet: GameTickPacket):
+    players = [packet.game_cars[i] for i in range(packet.num_cars)]
+
+    for section in overlay_data.sections:
+        for action in section.actions:
+            for player in players:
+                if player.name in action.action.description:
+                    action.action.description = action.action.description.replace(
+                        player.name, get_highlighted_player_name(player))
