@@ -27,6 +27,8 @@
 
     setInterval(function() {
         $.get('twitch_broker_overlay.json', function(data) {
+            if (typeof data === "string") data = JSON.parse(data);
+
             const dataString = JSON.stringify(data);
             if (dataString !== previousData) {
 
