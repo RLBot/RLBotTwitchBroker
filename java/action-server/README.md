@@ -16,3 +16,21 @@ You can view the api documentation in swagger-ui by pointing to
 http://localhost:8080/  
 
 Change default port value in application.properties
+
+## Publishing
+In order to publish, you must create a settings.xml file at ~/.m2/settings.xml
+```xml
+<?xml version='1.0' encoding='UTF-8'?>
+<settings xsi:schemaLocation='http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd'
+          xmlns='http://maven.apache.org/SETTINGS/1.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+    <servers>
+        <server>
+            <id>bintray-rlbotofficial-RLBotMaven</id>
+            <username>rlbotofficial</username>
+            <password>**********</password>
+         </server>
+    </servers>
+</settings>
+```
+
+For the password, log in to https://bintray.com/profile/edit and get the API key.
