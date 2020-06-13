@@ -15,20 +15,25 @@ class ActionChoice(Model):
 
     Do not edit the class manually.
     """
-    def __init__(self, action: BotAction=None):  # noqa: E501
+    def __init__(self, action: BotAction=None, entity_name: str=None):  # noqa: E501
         """ActionChoice - a model defined in Swagger
 
         :param action: The action of this ActionChoice.  # noqa: E501
         :type action: BotAction
+        :param entity_name: The entity_name of this ActionChoice.  # noqa: E501
+        :type entity_name: str
         """
         self.swagger_types = {
-            'action': BotAction
+            'action': BotAction,
+            'entity_name': str
         }
 
         self.attribute_map = {
-            'action': 'action'
+            'action': 'action',
+            'entity_name': 'entityName'
         }
         self._action = action
+        self._entity_name = entity_name
 
     @classmethod
     def from_dict(cls, dikt) -> 'ActionChoice':
@@ -61,3 +66,26 @@ class ActionChoice(Model):
         """
 
         self._action = action
+
+    @property
+    def entity_name(self) -> str:
+        """Gets the entity_name of this ActionChoice.
+
+        The name of the bot or script that this action is associated with.  # noqa: E501
+
+        :return: The entity_name of this ActionChoice.
+        :rtype: str
+        """
+        return self._entity_name
+
+    @entity_name.setter
+    def entity_name(self, entity_name: str):
+        """Sets the entity_name of this ActionChoice.
+
+        The name of the bot or script that this action is associated with.  # noqa: E501
+
+        :param entity_name: The entity_name of this ActionChoice.
+        :type entity_name: str
+        """
+
+        self._entity_name = entity_name
