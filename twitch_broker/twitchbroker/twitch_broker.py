@@ -33,25 +33,22 @@ class AvailableActionAggregator:
     def fetch_all(self) -> List[AvailableActionsAndServerId]:
         registry = client_registry.CLIENT_REGISTRY
         request_threads = []
-        for client in list(registry.clients.values()):
-            if client.base_url not in self.action_apis:
-                self.action_apis[client.get_key()] = self.make_action_api(client)
-
-            action_api = self.action_apis[client.get_key()]
-
-            # For some reason these API calls are slow as molasses
-            # After stepping through, it seems like we take about 1 second to form a connection.
-            # When calling the same API via Chrome, it's lightning fast.
-            # (I did this by visiting http://127.0.0.1:8080/action/currentlyAvailable )
-            # I tried setting the request header Connection=keep-alive, but that didn't help.
-            request_threads.append((client.get_key(), action_api.get_actions_currently_available(
-                async_req=True, _request_timeout=0.2)))
-
         combined_actions: List[AvailableActionsAndServerId] = []
-        for (client_key, req) in request_threads:
-            avail_actions_list = req.get()
-            combined_actions += [AvailableActionsAndServerId(a, client_key) for a in avail_actions_list]
+        try:
+            for client in list(registry.clients.values()):
+                if client.base_url not in self.action_apis:
+                    self.action_apis[client.get_key()] = self.make_action_api(client)
 
+                action_api = self.action_apis[client.get_key()]
+
+                request_threads.append((client.get_key(), action_api.get_actions_currently_available(
+                    async_req=True, _request_timeout=0.2)))
+
+            for (client_key, req) in request_threads:
+                avail_actions_list = req.get()
+                combined_actions += [AvailableActionsAndServerId(a, client_key) for a in avail_actions_list]
+        except Exception as e:
+            print(e)
         return combined_actions
 
     def get_action_api(self, action_server_id):
@@ -150,7 +147,10 @@ class TwitchBroker(BaseScript):
                             print(f"Invalid choice number {choice_num}")
                             continue
                         action_api = aggregator.get_action_api(choice.action_server_id)
-                        result = action_api.choose_action(ActionChoice(action=choice.bot_action))
+                        try:
+                            result = action_api.choose_action(ActionChoice(action=choice.bot_action, entity_name=choice.entity_name))
+                        except Exception as e:
+                            print(e)
                         command_count += 1
                         recent_commands.append(CommandAcknowledgement(chat_line.username, choice.bot_action.description, "success", str(command_count)))
                         stop_list.add(stop_string)
