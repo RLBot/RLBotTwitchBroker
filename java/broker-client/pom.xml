@@ -6,33 +6,14 @@
   <packaging>jar</packaging>
   <name>TwitchBrokerClient</name>
   <version>1.0.0</version>
-  <url>https://github.com/swagger-api/swagger-codegen</url>
-  <description>Swagger Java</description>
-  <scm>
-    <connection>scm:git:git@github.com:swagger-api/swagger-codegen.git</connection>
-    <developerConnection>scm:git:git@github.com:swagger-api/swagger-codegen.git</developerConnection>
-    <url>https://github.com/swagger-api/swagger-codegen</url>
-  </scm>
-  <prerequisites>
-    <maven>2.2.0</maven>
-  </prerequisites>
+  <description>Client for connecting to RLBot Twitch Broker</description>
 
-  <licenses>
-    <license>
-      <name>Unlicense</name>
-      <url>https://opensource.org/licenses/MIT</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <developers>
-    <developer>
-      <name>Swagger</name>
-      <email>apiteam@swagger.io</email>
-      <organization>Swagger</organization>
-      <organizationUrl>http://swagger.io</organizationUrl>
-    </developer>
-  </developers>
+  <distributionManagement>
+    <repository>
+      <id>bintray-rlbotofficial-RLBotMaven</id>
+      <url>https://api.bintray.com/maven/rlbotofficial/RLBotMaven/TwitchBrokerClient/;publish=1</url>
+    </repository>
+  </distributionManagement>
 
   <build>
     <plugins>
@@ -143,30 +124,6 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>sign-artifacts</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.5</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
   <dependencies>
     <dependency>
