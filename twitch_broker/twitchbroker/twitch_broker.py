@@ -117,13 +117,15 @@ class TwitchBroker(BaseScript):
             while not packet.game_info.is_round_active:
                 sleep(.2)
                 packet = self.get_game_tick_packet()
-            if self.broker_settings.pause_on_menu and overlay_data.num_actions() > 0:
-                self.set_game_state(GameState(game_info=GameInfoState(game_speed=0.01)))
 
             all_actions = aggregator.fetch_all()
             if len(all_actions) == 0:
                 sleep(0.1)
                 continue
+
+            if self.broker_settings.pause_on_menu and overlay_data.num_actions() > 0:
+                self.set_game_state(GameState(game_info=GameInfoState(game_speed=0.01)))
+
             self.menu_id = generate_menu_id()
             overlay_data = generate_menu(all_actions, self.menu_id, recent_commands, packet)
             self.write_json_for_overlay(overlay_data)
@@ -149,10 +151,12 @@ class TwitchBroker(BaseScript):
                         action_api = aggregator.get_action_api(choice.action_server_id)
                         try:
                             result = action_api.choose_action(ActionChoice(action=choice.bot_action, entity_name=choice.entity_name))
+                            command_count += 1
+                            status = "success" if result.code == 200 else "error"
+                            description = choice.bot_action.description if result.code == 200 else result.reason
+                            recent_commands.append(CommandAcknowledgement(chat_line.username, description, status, str(command_count)))
                         except Exception as e:
                             print(e)
-                        command_count += 1
-                        recent_commands.append(CommandAcknowledgement(chat_line.username, choice.bot_action.description, "success", str(command_count)))
                         stop_list.add(stop_string)
                         if len(recent_commands) > 10:
                             recent_commands.pop(0)  # Get rid of the oldest command
