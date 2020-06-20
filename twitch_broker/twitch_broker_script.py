@@ -38,6 +38,7 @@ if __name__ == '__main__':
 
     num_old_menus_to_honor = 2
     pause_on_menu = False
+    vote_period = 5.0
 
     if 'BrokerConfig' in config:
         brokerconf = config['BrokerConfig']
@@ -45,8 +46,19 @@ if __name__ == '__main__':
             num_old_menus_to_honor = brokerconf.getint('num_old_menus_to_honor')
         if 'pause_on_menu' in brokerconf:
             pause_on_menu = brokerconf.getboolean('pause_on_menu')
+        if 'vote_period' in brokerconf:
+            vote_period = brokerconf.getfloat('vote_period')
 
-    settings = MutableBrokerSettings(num_old_menus_to_honor=num_old_menus_to_honor, pause_on_menu=pause_on_menu)
+    # Require multiple people from twitch chat to attempt the same command before firing it, to nerf disruptive ones.
+    # Configured by entity name, a.k.a. section header.
+    votes_needed = {}
+    if 'VotesNeeded' in config:
+        vote_conf = config['VotesNeeded']
+        for key, value in vote_conf.items():
+            votes_needed[key] = int(value)
+
+    settings = MutableBrokerSettings(num_old_menus_to_honor=num_old_menus_to_honor, pause_on_menu=pause_on_menu,
+                                     votes_needed=votes_needed, vote_period=vote_period)
 
     # Open up http://127.0.0.1:7307/static/chat_form.html if you want to send test commands without
     # connecting to twitch.
