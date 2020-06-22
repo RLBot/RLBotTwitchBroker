@@ -193,10 +193,10 @@ class TwitchBroker(BaseScript):
                         # Vote successful! Clear out the vote tracker.
                         self.vote_trackers.pop(choice.bot_action.description)
                 action_api = self.aggregator.get_action_api(choice.action_server_id)
+                self.command_count += 1
                 try:
                     result = action_api.choose_action(
                         ActionChoice(action=choice.bot_action, entity_name=choice.entity_name))
-                    self.command_count += 1
                     status = "success" if result.code == 200 else "error"
                     description = choice.bot_action.description if result.code == 200 else result.reason
                     self.recent_commands.append(
@@ -204,6 +204,8 @@ class TwitchBroker(BaseScript):
                     if result.code == 200:
                         self.stop_list.add(stop_string)
                 except Exception as e:
+                    self.recent_commands.append(
+                        CommandAcknowledgement(chat_line.username, str(e), "error", str(self.command_count)))
                     print(e)
                 if len(self.recent_commands) > 10:
                     self.recent_commands.pop(0)  # Get rid of the oldest command
