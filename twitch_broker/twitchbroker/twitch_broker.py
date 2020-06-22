@@ -76,7 +76,6 @@ class MutableBrokerSettings:
     pause_on_menu: bool = False
     play_time_between_pauses: int = 5
     votes_needed: Dict[str, int] = field(default_factory=dict)
-    vote_period: float = 5
 
 
 class TwitchBroker(BaseScript):
