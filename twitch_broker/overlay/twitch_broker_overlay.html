@@ -96,7 +96,7 @@
                         let cmd = data.recent_commands[i];
                         // https://kamranahmed.info/toast
                         $.toast({
-                            heading: cmd.username,
+                            heading: cmd.voters.join(', '),
                             text: cmd.description,
                             position: { top: 100, left: 350},
                             showHideTransition: 'fade',

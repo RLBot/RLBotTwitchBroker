@@ -93,7 +93,6 @@ class TwitchBroker(BaseScript):
         self.needs_new_menu = True
         self.aggregator = AvailableActionAggregator()
         self.recent_commands: List[CommandAcknowledgement] = []
-        self.stop_list = set()
         self.command_count = 0
         self.next_menu_moment: float = 0
         if twitch_auth:
@@ -195,13 +194,13 @@ class TwitchBroker(BaseScript):
             match = re.search(menu.menu_id + '([0-9]+)', text, re.IGNORECASE)
             if match is None:
                 continue
-            stop_string = f'{match.group(0)}{chat_line.username}'
-            if stop_string not in self.stop_list:
+            if chat_line.username not in menu.chat_users_involved:
                 choice_num = int(match.group(1))
                 choice = menu.retrieve_choice(choice_num)
                 if not choice:
                     print(f"Invalid choice number {choice_num}")
                     continue
+                voters = [chat_line.username]
                 vote_tracker_key = choice.bot_action.description
                 if vote_tracker_key in self.vote_trackers:
                     vote_tracker = self.vote_trackers[vote_tracker_key]
@@ -211,6 +210,7 @@ class TwitchBroker(BaseScript):
                         self.write_json_for_overlay(self.recent_menus[0])
                         continue
 
+                    voters = vote_tracker.voters
                     self.vote_trackers[vote_tracker_key] = self.make_vote_tracker(choice.entity_name, self.menu_id, vote_tracker)
                     self.write_json_for_overlay(self.recent_menus[0])
 
@@ -222,12 +222,12 @@ class TwitchBroker(BaseScript):
                     status = "success" if result.code == 200 else "error"
                     description = choice.bot_action.description if result.code == 200 else result.reason
                     self.recent_commands.append(
-                        CommandAcknowledgement(chat_line.username, description, status, str(self.command_count)))
+                        CommandAcknowledgement(chat_line.username, description, status, str(self.command_count), voters))
                     if result.code == 200:
-                        self.stop_list.add(stop_string)
+                        menu.chat_users_involved.append(chat_line.username)
                 except Exception as e:
                     self.recent_commands.append(
-                        CommandAcknowledgement(chat_line.username, str(e), "error", str(self.command_count)))
+                        CommandAcknowledgement(chat_line.username, str(e), "error", str(self.command_count), voters))
                     print(e)
                 if len(self.recent_commands) > 10:
                     self.recent_commands.pop(0)  # Get rid of the oldest command
