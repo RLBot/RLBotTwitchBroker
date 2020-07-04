@@ -17,7 +17,7 @@
 </head>
 <body>
 
-    <div id="overlay_div"></div>
+<div id="overlay_div"></div>
 
 <script>
     const overlayDiv = $('#overlay_div');
@@ -37,9 +37,17 @@
             if (dataString !== previousData) {
 
                 overlayDiv.empty();
+                if (data.is_menu_active) {
+                    overlayDiv.removeClass('inactive-menu');
+                } else {
+                    overlayDiv.addClass('inactive-menu');
+                }
+
                 if (data.sections.length === 0) {
                     overlayDiv.append($('<div class="section"><div class="section-header">Ready</div></div>'))
                 }
+
+                overlayDiv.append($('<div class="menu-prefix">' + data.menu_id + '</div>'));
 
                 for (let i = 0; i < data.sections.length; i++) {
 
@@ -90,13 +98,12 @@
                         $.toast({
                             heading: cmd.username,
                             text: cmd.description,
-                            position: { top: 35, left: 400},
+                            position: { top: 100, left: 350},
                             showHideTransition: 'fade',
                             hideAfter: 4000,
                             loader: false,
                             allowToastClose: false,
                             stack: 3,
-                            icon: cmd.status,
                         });
                         latestCommandId = cmd.id;
                     }

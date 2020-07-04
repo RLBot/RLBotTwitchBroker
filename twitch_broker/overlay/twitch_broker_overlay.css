@@ -11,6 +11,17 @@ body {
     float: left;
 }
 
+.menu-prefix {
+    font-size: 3em;
+    color: black;
+    -webkit-text-stroke: 1px white;
+    font-weight: bold;
+}
+
+.inactive-menu .section {
+    opacity: 30%;
+}
+
 #message {
     display: inline-block;
     font-size: 1.6em;
@@ -24,7 +35,7 @@ body {
 }
 
 .section {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     background-color: rgba(255, 255, 255, 0.8);
     padding: 5px 10px;
     border-radius: 3px;
@@ -51,6 +62,10 @@ body {
     font-family: "Consolas", "Courier New", monospace;
     font-weight: bold;
     font-size: 1.1em;
+}
+
+.jq-toast-wrap {
+    width: 200px;
 }
 
 div.jq-toast-single {
@@ -84,14 +99,17 @@ div.jq-toast-single.jq-icon-error {
 .vote-token {
     width: 10px;
     height: 10px;
-    border: solid 1px gray;
-    border-radius: 5px;
-    margin-right: 4px;
+    border: solid 2px gray;
+    box-shadow: inset 1px 1px 3px #333;
+    border-radius: 10px;
+    margin-right: 1px;
     display: inline-block;
 }
 
 .vote-token.vote-filled {
     background-color: #00c200;
+    box-shadow: none;
+    border-color: black;
 }
 
 .vote-bar {

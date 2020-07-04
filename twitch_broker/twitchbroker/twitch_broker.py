@@ -1,6 +1,7 @@
 import json
 import re
 from dataclasses import dataclass, field
+from math import sqrt, ceil
 from pathlib import Path
 from threading import Thread
 from typing import List, Dict
@@ -116,9 +117,28 @@ class TwitchBroker(BaseScript):
             self.get_game_tick_packet()
             self.ensure_action_menu()
             self.process_chat()
-            # self.make_passive_overlay_updates()
+            self.make_passive_overlay_updates()
 
             sleep(.1)
+
+    def make_vote_tracker(self, entity_name: str, menu_id: str, prev_tracker: VoteTracker) -> VoteTracker:
+        min_votes_needed = 1
+        votes_needed_key = entity_name.lower()
+        if votes_needed_key in self.broker_settings.votes_needed:
+            min_votes_needed = self.broker_settings.votes_needed[votes_needed_key]
+
+        game_seconds = self.game_tick_packet.game_info.seconds_elapsed
+        if prev_tracker is not None:
+            votes_per_second = prev_tracker.votes_needed / (game_seconds - prev_tracker.start_time)
+            # .25 votes per second = 1 votes needed = action per 4 seconds
+            # 1 vote per second = 2 votes needed = action per 2 seconds
+            # 4 votes per second = 4 votes needed = action per 1 seconds
+            # 16 votes per second = 8 votes needed = action per .5 seconds
+            if votes_per_second > 0:  # can go negative after game ends
+                computed_votes = ceil(2 * sqrt(votes_per_second))
+                min_votes_needed = max(min_votes_needed, computed_votes)
+
+        return VoteTracker(min_votes_needed, menu_id, [], game_seconds)
 
     def ensure_action_menu(self):
         if not self.needs_new_menu:
@@ -130,12 +150,20 @@ class TwitchBroker(BaseScript):
                 self.set_game_state(GameState(game_info=GameInfoState(game_speed=1)))
             return
 
-        if self.game_tick_packet.game_info.seconds_elapsed < self.next_menu_moment:
+        game_seconds = self.game_tick_packet.game_info.seconds_elapsed
+        if game_seconds < self.next_menu_moment:
             return
 
         all_actions = self.aggregator.fetch_all()
-
         self.menu_id = generate_menu_id()
+
+        # Make sure we've got vote trackers for everything
+        for action_group in all_actions:
+            for action in action_group.available_actions.available_actions:
+                description = action.description
+                if action.description not in self.vote_trackers:
+                    self.vote_trackers[description] = self.make_vote_tracker(action_group.available_actions.entity_name, self.menu_id, None)
+
         overlay_data = generate_menu(all_actions, self.menu_id, self.recent_commands, self.game_tick_packet,
                                      self.vote_trackers)
 
@@ -151,15 +179,11 @@ class TwitchBroker(BaseScript):
 
         self.recent_menus.insert(0, overlay_data)
         if len(self.recent_menus) > self.broker_settings.num_old_menus_to_honor + 1:
-            killed_menu = self.recent_menus.pop()
-            expired_vote_tracker_keys = [key for key, tracker in self.vote_trackers.items() if tracker.original_menu_id == killed_menu.menu_id]
-            for expired_vt_key in expired_vote_tracker_keys:
-                self.vote_trackers.pop(expired_vt_key)
+            self.recent_menus.pop()
         self.needs_new_menu = False
 
     def process_chat(self):
         if not self.game_tick_packet.game_info.is_round_active:
-            self.vote_trackers.clear()
             return
 
         if not self.chat_buffer.has_chat():
@@ -178,19 +202,18 @@ class TwitchBroker(BaseScript):
                 if not choice:
                     print(f"Invalid choice number {choice_num}")
                     continue
-                votes_needed_key = choice.entity_name.lower()
-                if votes_needed_key in self.broker_settings.votes_needed:
-                    votes_needed = self.broker_settings.votes_needed[votes_needed_key]
-                    if votes_needed > 1:
-                        if choice.bot_action.description not in self.vote_trackers:
-                            self.vote_trackers[choice.bot_action.description] = VoteTracker(votes_needed, menu.menu_id, [])
-                        vote_tracker = self.vote_trackers[choice.bot_action.description]
-                        vote_tracker.register_vote(chat_line.username)
+                vote_tracker_key = choice.bot_action.description
+                if vote_tracker_key in self.vote_trackers:
+                    vote_tracker = self.vote_trackers[vote_tracker_key]
+                    vote_tracker.register_vote(chat_line.username)
+
+                    if not vote_tracker.has_needed_votes():
                         self.write_json_for_overlay(self.recent_menus[0])
-                        if not vote_tracker.has_needed_votes():
-                            continue
-                        # Vote successful! Clear out the vote tracker.
-                        self.vote_trackers.pop(choice.bot_action.description)
+                        continue
+
+                    self.vote_trackers[vote_tracker_key] = self.make_vote_tracker(choice.entity_name, self.menu_id, vote_tracker)
+                    self.write_json_for_overlay(self.recent_menus[0])
+
                 action_api = self.aggregator.get_action_api(choice.action_server_id)
                 self.command_count += 1
                 try:
@@ -218,3 +241,9 @@ class TwitchBroker(BaseScript):
                         self.set_game_state(GameState(game_info=GameInfoState(game_speed=1)))
                         self.next_menu_moment = self.game_tick_packet.game_info.seconds_elapsed + self.broker_settings.play_time_between_pauses
                 break
+
+    def make_passive_overlay_updates(self):
+
+        if len(self.recent_menus) > 0 and self.game_tick_packet.game_info.is_round_active != self.recent_menus[0].is_menu_active:
+            self.recent_menus[0].is_menu_active = self.game_tick_packet.game_info.is_round_active
+            self.write_json_for_overlay(self.recent_menus[0])

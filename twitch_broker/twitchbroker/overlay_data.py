@@ -30,6 +30,7 @@ class VoteTracker:
     votes_needed: int
     original_menu_id: str
     voters: List[str]
+    start_time: float
 
     def register_vote(self, username):
         if username not in self.voters:
@@ -59,7 +60,8 @@ def generate_menu(list: List[AvailableActionsAndServerId], menu_id: str,
     players = [PlayerData(p.name, p.team) for p in raw_players if p.name]
     counter = itertools.count(1)
     return OverlayData(menu_id=menu_id, sections=[create_section(s, counter) for s in list],
-                       recent_commands=recent_commands, players=players, vote_trackers=vote_trackers)
+                       recent_commands=recent_commands, players=players, vote_trackers=vote_trackers,
+                       is_menu_active=packet.game_info.is_round_active)
 
 
 @dataclass
@@ -83,6 +85,7 @@ class OverlayData:
     recent_commands: List[CommandAcknowledgement]
     players: List[PlayerData]
     vote_trackers: Dict[str, VoteTracker]
+    is_menu_active: bool
 
     def retrieve_choice(self, choice_num: int) -> ActionAndServerId:
         for section in self.sections:
