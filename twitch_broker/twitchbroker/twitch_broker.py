@@ -1,5 +1,7 @@
 import json
+import random
 import re
+import string
 from dataclasses import dataclass, field
 from math import sqrt, ceil
 from pathlib import Path
@@ -121,6 +123,11 @@ class TwitchBroker(BaseScript):
 
             sleep(.1)
 
+            # This code used for stress testing.
+            # fake_user = f'user_{random.choice(string.ascii_uppercase)}'
+            # fake_chat = f'{self.menu_id}{random.randint(1, 5)}'
+            # self.chat_buffer.enqueue_chat(ChatLine(fake_user, fake_chat))
+
     def make_vote_tracker(self, entity_name: str, menu_id: str, prev_tracker: VoteTracker) -> VoteTracker:
         min_votes_needed = 1
         votes_needed_key = entity_name.lower()
@@ -189,62 +196,60 @@ class TwitchBroker(BaseScript):
         if not self.game_tick_packet.game_info.is_round_active:
             return
 
-        if not self.chat_buffer.has_chat():
-            return
-
-        chat_line = self.chat_buffer.dequeue_chat()
-        text = chat_line.message
-        for menu_index, menu in enumerate(self.recent_menus):
-            match = re.search(menu.menu_id + '([0-9]+)', text, re.IGNORECASE)
-            if match is None:
-                continue
-            if chat_line.username not in menu.chat_users_involved:
-                choice_num = int(match.group(1))
-                choice = menu.retrieve_choice(choice_num)
-                if not choice:
-                    print(f"Invalid choice number {choice_num}")
+        while self.chat_buffer.has_chat():
+            chat_line = self.chat_buffer.dequeue_chat()
+            text = chat_line.message
+            for menu_index, menu in enumerate(self.recent_menus):
+                match = re.search(menu.menu_id + '([0-9]+)', text, re.IGNORECASE)
+                if match is None:
                     continue
-                voters = [chat_line.username]
-                vote_tracker_key = choice.bot_action.description
-                if vote_tracker_key in self.vote_trackers:
-                    vote_tracker = self.vote_trackers[vote_tracker_key]
-                    vote_tracker.register_vote(chat_line.username)
-
-                    if not vote_tracker.has_needed_votes():
-                        self.write_json_for_overlay(self.recent_menus[0])
+                if chat_line.username not in menu.chat_users_involved:
+                    choice_num = int(match.group(1))
+                    choice = menu.retrieve_choice(choice_num)
+                    if not choice:
+                        print(f"Invalid choice number {choice_num}")
                         continue
+                    voters = [chat_line.username]
+                    vote_tracker_key = choice.bot_action.description
+                    if vote_tracker_key in self.vote_trackers:
+                        vote_tracker = self.vote_trackers[vote_tracker_key]
+                        vote_tracker.register_vote(chat_line.username)
 
-                    voters = vote_tracker.voters
-                    self.vote_trackers[vote_tracker_key] = self.make_vote_tracker(choice.entity_name, self.menu_id, vote_tracker)
+                        if not vote_tracker.has_needed_votes():
+                            self.write_json_for_overlay(self.recent_menus[0])
+                            continue
+
+                        voters = vote_tracker.voters
+                        self.vote_trackers[vote_tracker_key] = self.make_vote_tracker(choice.entity_name, self.menu_id, vote_tracker)
+                        self.write_json_for_overlay(self.recent_menus[0])
+
+                    action_api = self.aggregator.get_action_api(choice.action_server_id)
+                    self.command_count += 1
+                    try:
+                        result = action_api.choose_action(
+                            ActionChoice(action=choice.bot_action, entity_name=choice.entity_name))
+                        status = "success" if result.code == 200 else "error"
+                        description = choice.bot_action.description if result.code == 200 else result.reason
+                        self.recent_commands.append(
+                            CommandAcknowledgement(chat_line.username, description, status, str(self.command_count), voters))
+                        if result.code == 200:
+                            menu.chat_users_involved.append(chat_line.username)
+                    except Exception as e:
+                        self.recent_commands.append(
+                            CommandAcknowledgement(chat_line.username, str(e), "error", str(self.command_count), voters))
+                        print(e)
+                    if len(self.recent_commands) > 10:
+                        self.recent_commands.pop(0)  # Get rid of the oldest command
+
+                    # This causes the new command acknowledgement to get published. The overlay_data has an
+                    # internal reference to recent_commands.
                     self.write_json_for_overlay(self.recent_menus[0])
-
-                action_api = self.aggregator.get_action_api(choice.action_server_id)
-                self.command_count += 1
-                try:
-                    result = action_api.choose_action(
-                        ActionChoice(action=choice.bot_action, entity_name=choice.entity_name))
-                    status = "success" if result.code == 200 else "error"
-                    description = choice.bot_action.description if result.code == 200 else result.reason
-                    self.recent_commands.append(
-                        CommandAcknowledgement(chat_line.username, description, status, str(self.command_count), voters))
-                    if result.code == 200:
-                        menu.chat_users_involved.append(chat_line.username)
-                except Exception as e:
-                    self.recent_commands.append(
-                        CommandAcknowledgement(chat_line.username, str(e), "error", str(self.command_count), voters))
-                    print(e)
-                if len(self.recent_commands) > 10:
-                    self.recent_commands.pop(0)  # Get rid of the oldest command
-
-                # This causes the new command acknowledgement to get published. The overlay_data has an
-                # internal reference to recent_commands.
-                self.write_json_for_overlay(self.recent_menus[0])
-                if menu_index == 0:
-                    self.needs_new_menu = True
-                    if self.broker_settings.pause_on_menu:
-                        self.set_game_state(GameState(game_info=GameInfoState(game_speed=1)))
-                        self.next_menu_moment = self.game_tick_packet.game_info.seconds_elapsed + self.broker_settings.play_time_between_pauses
-                break
+                    if menu_index == 0:
+                        self.needs_new_menu = True
+                        if self.broker_settings.pause_on_menu:
+                            self.set_game_state(GameState(game_info=GameInfoState(game_speed=1)))
+                            self.next_menu_moment = self.game_tick_packet.game_info.seconds_elapsed + self.broker_settings.play_time_between_pauses
+                    break
 
     def make_passive_overlay_updates(self):
 
