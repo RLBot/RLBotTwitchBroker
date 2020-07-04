@@ -137,6 +137,7 @@ class TwitchBroker(BaseScript):
                 # 1 vote per second = 4 votes needed = action per 4 seconds
                 # 4 votes per second = 8 votes needed = action per 2 seconds
                 # 16 votes per second = 16 votes needed = action per 1 second
+                # https://www.wolframalpha.com/input/?i=plot+x+%2F+ceil%284+*+sqrt%28x%29%29%2Cx%3D0..8
                 computed_votes = ceil(4 * sqrt(votes_per_second))
                 min_votes_needed = max(min_votes_needed, computed_votes)
 
