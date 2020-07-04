@@ -128,12 +128,13 @@ class TwitchBroker(BaseScript):
 
         game_seconds = self.game_tick_packet.game_info.seconds_elapsed
         if prev_tracker is not None:
-            votes_per_second = prev_tracker.votes_needed / (game_seconds - prev_tracker.start_time)
-            # .25 votes per second = 1 votes needed = action per 4 seconds
-            # 1 vote per second = 2 votes needed = action per 2 seconds
-            # 4 votes per second = 4 votes needed = action per 1 seconds
-            # 16 votes per second = 8 votes needed = action per .5 seconds
-            if votes_per_second > 0:  # can go negative after game ends
+            elapsed_time = game_seconds - prev_tracker.start_time
+            if elapsed_time > 0:
+                votes_per_second = prev_tracker.votes_needed / elapsed_time
+                # .25 votes per second = 1 votes needed = action per 4 seconds
+                # 1 vote per second = 2 votes needed = action per 2 seconds
+                # 4 votes per second = 4 votes needed = action per 1 seconds
+                # 16 votes per second = 8 votes needed = action per .5 seconds
                 computed_votes = ceil(2 * sqrt(votes_per_second))
                 min_votes_needed = max(min_votes_needed, computed_votes)
 

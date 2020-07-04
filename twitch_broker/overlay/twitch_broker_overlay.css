@@ -13,13 +13,9 @@ body {
 
 .menu-prefix {
     font-size: 3em;
-    color: black;
-    -webkit-text-stroke: 1px white;
+    color: white;
+    text-shadow: 2px 2px 6px black;
     font-weight: bold;
-}
-
-.inactive-menu .section {
-    opacity: 30%;
 }
 
 #message {
@@ -40,6 +36,10 @@ body {
     padding: 5px 10px;
     border-radius: 3px;
     box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.71);
+}
+
+.inactive-menu .section {
+    background-color: rgba(255, 255, 255, 0.25);
 }
 
 .section-header {
