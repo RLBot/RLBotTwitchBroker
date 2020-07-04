@@ -77,6 +77,7 @@ class MutableBrokerSettings:
     pause_on_menu: bool = False
     play_time_between_pauses: int = 5
     votes_needed: Dict[str, int] = field(default_factory=dict)
+    max_menu_lifespan: float = 12
 
 
 class TwitchBroker(BaseScript):
@@ -131,11 +132,12 @@ class TwitchBroker(BaseScript):
             elapsed_time = game_seconds - prev_tracker.start_time
             if elapsed_time > 0:
                 votes_per_second = prev_tracker.votes_needed / elapsed_time
-                # .25 votes per second = 1 votes needed = action per 4 seconds
-                # 1 vote per second = 2 votes needed = action per 2 seconds
-                # 4 votes per second = 4 votes needed = action per 1 seconds
-                # 16 votes per second = 8 votes needed = action per .5 seconds
-                computed_votes = ceil(2 * sqrt(votes_per_second))
+                # 1/8 votes per second = 1 vote needed = action per 8 seconds
+                # .25 votes per second = 2 votes needed = action per 8 seconds
+                # 1 vote per second = 4 votes needed = action per 4 seconds
+                # 4 votes per second = 8 votes needed = action per 2 seconds
+                # 16 votes per second = 16 votes needed = action per 1 second
+                computed_votes = ceil(4 * sqrt(votes_per_second))
                 min_votes_needed = max(min_votes_needed, computed_votes)
 
         return VoteTracker(min_votes_needed, menu_id, [], game_seconds)
@@ -245,6 +247,12 @@ class TwitchBroker(BaseScript):
 
     def make_passive_overlay_updates(self):
 
-        if len(self.recent_menus) > 0 and self.game_tick_packet.game_info.is_round_active != self.recent_menus[0].is_menu_active:
-            self.recent_menus[0].is_menu_active = self.game_tick_packet.game_info.is_round_active
-            self.write_json_for_overlay(self.recent_menus[0])
+        if len(self.recent_menus) > 0:
+            if self.game_tick_packet.game_info.is_round_active != self.recent_menus[0].is_menu_active:
+                self.recent_menus[0].is_menu_active = self.game_tick_packet.game_info.is_round_active
+                self.write_json_for_overlay(self.recent_menus[0])
+
+            game_seconds = self.game_tick_packet.game_info.seconds_elapsed
+            menu_creation_time = self.recent_menus[0].creation_time
+            if menu_creation_time > game_seconds or game_seconds > menu_creation_time + self.broker_settings.max_menu_lifespan:
+                self.needs_new_menu = True

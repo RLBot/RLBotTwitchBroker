@@ -62,7 +62,8 @@ def generate_menu(list: List[AvailableActionsAndServerId], menu_id: str,
     counter = itertools.count(1)
     return OverlayData(menu_id=menu_id, sections=[create_section(s, counter) for s in list],
                        recent_commands=recent_commands, players=players, vote_trackers=vote_trackers,
-                       is_menu_active=packet.game_info.is_round_active, chat_users_involved=[])
+                       is_menu_active=packet.game_info.is_round_active, chat_users_involved=[],
+                       creation_time=packet.game_info.seconds_elapsed)
 
 
 @dataclass
@@ -88,6 +89,7 @@ class OverlayData:
     vote_trackers: Dict[str, VoteTracker]
     is_menu_active: bool
     chat_users_involved: List[str]
+    creation_time: float
 
     def retrieve_choice(self, choice_num: int) -> ActionAndServerId:
         for section in self.sections:
