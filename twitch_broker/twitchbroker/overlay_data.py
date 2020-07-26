@@ -32,6 +32,9 @@ class VoteTracker:
     original_menu_id: str
     voters: List[str]
     start_time: float
+    deadline: float  # The game seconds (instant in time) at which this vote tracker should expire
+    entity_name: str  # This is used to retrieve config. Useful in situations where we're replacing the vote tracker with a new one.
+    five_second_warning: bool  # The UI can use this to start flashing when we're close to the deadline.
 
     def register_vote(self, username):
         if username not in self.voters:

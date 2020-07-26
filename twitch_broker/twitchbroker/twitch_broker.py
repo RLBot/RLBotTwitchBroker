@@ -1,19 +1,14 @@
 import json
-import random
 import re
-import string
 from dataclasses import dataclass, field
-from math import sqrt, ceil
 from pathlib import Path
 from threading import Thread
 from typing import List, Dict
 
+from math import ceil
 from rlbot.agents.base_script import BaseScript
 from rlbot.utils.game_state_util import GameState, GameInfoState
 from rlbot_action_client import Configuration, ActionApi, ApiClient, ActionChoice
-from twitchbroker.action_and_server_id import AvailableActionsAndServerId
-from twitchbroker.overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu, \
-    CommandAcknowledgement, VoteTracker
 from rlbot_twitch_broker_client.models.chat_line import ChatLine
 from rlbot_twitch_broker_server import chat_buffer
 from rlbot_twitch_broker_server import client_registry
@@ -22,6 +17,10 @@ from rlbot_twitch_broker_server.run import find_usable_port, run_twitch_broker_s
 from time import sleep
 from twitchio import Message
 from twitchio.ext.commands import Bot as TwitchBot
+
+from twitchbroker.action_and_server_id import AvailableActionsAndServerId
+from twitchbroker.overlay_data import OverlayData, serialize_for_overlay, generate_menu_id, generate_menu, \
+    CommandAcknowledgement, VoteTracker
 
 
 class AvailableActionAggregator:
@@ -78,7 +77,8 @@ class MutableBrokerSettings:
     num_old_menus_to_honor: int = 0
     pause_on_menu: bool = False
     play_time_between_pauses: int = 5
-    votes_needed: Dict[str, int] = field(default_factory=dict)
+    min_votes_needed: Dict[str, int] = field(default_factory=dict)
+    votes_needed_when_one_vote_per_second: Dict[str, int] = field(default_factory=dict)
     max_menu_lifespan: float = 12
 
 
@@ -124,31 +124,43 @@ class TwitchBroker(BaseScript):
             sleep(.1)
 
             # This code used for stress testing.
-            # fake_user = f'user_{random.choice(string.ascii_uppercase)}'
-            # fake_chat = f'{self.menu_id}{random.randint(1, 5)}'
-            # self.chat_buffer.enqueue_chat(ChatLine(fake_user, fake_chat))
+            # if len(self.recent_menus) > 0:
+            #     fake_user = f'user_{random.choice(string.ascii_uppercase)}{random.choice(string.ascii_uppercase)}'
+            #     fake_chat = f'{self.menu_id}{random.randint(1, self.recent_menus[0].num_actions())}'
+            #     self.chat_buffer.enqueue_chat(ChatLine(fake_user, fake_chat))
 
     def make_vote_tracker(self, entity_name: str, menu_id: str, prev_tracker: VoteTracker) -> VoteTracker:
+        votes_needed = 1
         min_votes_needed = 1
+        lifespan = 60  # This will get replaced by a smaller number if there was a prev tracker.
         votes_needed_key = entity_name.lower()
-        if votes_needed_key in self.broker_settings.votes_needed:
-            min_votes_needed = self.broker_settings.votes_needed[votes_needed_key]
+        if votes_needed_key in self.broker_settings.min_votes_needed:
+            min_votes_needed = self.broker_settings.min_votes_needed[votes_needed_key]
+            votes_needed = min_votes_needed
 
         game_seconds = self.game_tick_packet.game_info.seconds_elapsed
         if prev_tracker is not None:
+
+            votes_needed_when_one_vote_per_second = 4  # Sensible default: one action per 4 seconds when decently popular
+            if votes_needed_key in self.broker_settings.votes_needed_when_one_vote_per_second:
+                votes_needed_when_one_vote_per_second = self.broker_settings.votes_needed_when_one_vote_per_second[votes_needed_key]
+
             elapsed_time = game_seconds - prev_tracker.start_time
             if elapsed_time > 0:
-                votes_per_second = prev_tracker.votes_needed / elapsed_time
-                # 1/8 votes per second = 1 vote needed = action per 8 seconds
-                # .25 votes per second = 2 votes needed = action per 8 seconds
-                # 1 vote per second = 4 votes needed = action per 4 seconds
-                # 4 votes per second = 8 votes needed = action per 2 seconds
-                # 16 votes per second = 16 votes needed = action per 1 second
-                # https://www.wolframalpha.com/input/?i=plot+x+%2F+ceil%284+*+sqrt%28x%29%29%2Cx%3D0..8
-                computed_votes = ceil(4 * sqrt(votes_per_second))
-                min_votes_needed = max(min_votes_needed, computed_votes)
+                votes_per_second = len(prev_tracker.voters) / elapsed_time
 
-        return VoteTracker(min_votes_needed, menu_id, [], game_seconds)
+                # https://www.wolframalpha.com/input/?i=plot+x+%2F+ceil%284+*+x+%5E+.9%29%2Cx%3D0..8
+                falloff_exponent = .9
+                computed_votes = ceil(votes_needed_when_one_vote_per_second * pow(votes_per_second, falloff_exponent))
+                votes_needed = max(min_votes_needed, computed_votes)
+
+                if votes_needed > min_votes_needed:
+                    # If it takes 3 times longer than expected, give up on the vote. The next meter is expected to
+                    # require fewer votes because it took so long, and people will be able to re-vote.
+                    lifespan = 3 * votes_needed / votes_per_second
+
+        return VoteTracker(votes_needed, menu_id, [], game_seconds, deadline=game_seconds + lifespan,
+                           entity_name=entity_name, five_second_warning=False)
 
     def ensure_action_menu(self):
         if not self.needs_new_menu:
@@ -252,13 +264,24 @@ class TwitchBroker(BaseScript):
                     break
 
     def make_passive_overlay_updates(self):
-
+        needs_write = False
         if len(self.recent_menus) > 0:
             if self.game_tick_packet.game_info.is_round_active != self.recent_menus[0].is_menu_active:
                 self.recent_menus[0].is_menu_active = self.game_tick_packet.game_info.is_round_active
-                self.write_json_for_overlay(self.recent_menus[0])
+                needs_write = True
 
             game_seconds = self.game_tick_packet.game_info.seconds_elapsed
             menu_creation_time = self.recent_menus[0].creation_time
             if menu_creation_time > game_seconds or game_seconds > menu_creation_time + self.broker_settings.max_menu_lifespan:
                 self.needs_new_menu = True
+
+            for tracker_key, tracker in self.vote_trackers.items():
+                if game_seconds > tracker.deadline:
+                    self.vote_trackers[tracker_key] = self.make_vote_tracker(tracker.entity_name, self.menu_id, tracker)
+                    needs_write = True
+                elif game_seconds + 5 > tracker.deadline and not tracker.five_second_warning and tracker.votes_needed > 1:
+                    tracker.five_second_warning = True
+                    needs_write = True
+
+        if needs_write:
+            self.write_json_for_overlay(self.recent_menus[0])
