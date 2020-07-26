@@ -114,6 +114,7 @@ class TwitchBroker(BaseScript):
         broker_server_thread.setDaemon(True)
         broker_server_thread.start()
         client_registry.CLIENT_REGISTRY = client_registry.ActionServerRegistry()
+        self.write_json_for_overlay(generate_menu([], "", [], self.game_tick_packet, self.vote_trackers))
 
         while True:
             self.get_game_tick_packet()
