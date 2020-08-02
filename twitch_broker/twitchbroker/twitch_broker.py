@@ -6,6 +6,8 @@ from threading import Thread
 from typing import List, Dict
 
 from math import ceil
+import random
+import string
 from rlbot.agents.base_script import BaseScript
 from rlbot.utils.game_state_util import GameState, GameInfoState
 from rlbot_action_client import Configuration, ActionApi, ApiClient, ActionChoice
@@ -206,11 +208,10 @@ class TwitchBroker(BaseScript):
         self.needs_new_menu = False
 
     def process_chat(self):
-        if not self.game_tick_packet.game_info.is_round_active:
-            return
-
         while self.chat_buffer.has_chat():
             chat_line = self.chat_buffer.dequeue_chat()
+            if not self.game_tick_packet.game_info.is_round_active:
+                continue
             text = chat_line.message
             for menu_index, menu in enumerate(self.recent_menus):
                 match = re.search(menu.menu_id + '([0-9]+)', text, re.IGNORECASE)
